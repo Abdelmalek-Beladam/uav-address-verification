@@ -28,13 +28,13 @@ Explore the interactive review dashboard directly in your browser without instal
 
 ## 🧠 Model Checkpoint
 
-The fine-tuned detector weights (est.pt) are available on the [Releases Page](https://github.com/Abdelmalek-Beladam/uav-address-verification/releases/tag/v1.0.0):
+The fine-tuned detector weights (`best.pt`) are available on the [Releases Page](https://github.com/Abdelmalek-Beladam/uav-address-verification/releases/tag/v1.0.0):
 
 | Model | Input Size | Parameters | Size | mAP50 | Precision | Recall | Download |
 |---|---|---|---|---|---|---|---|
 | **YOLO26n** (fine-tuned) | 1280×1280 | 2.53M | 5.31 MB | **86.3%** | **91.7%** | **79.8%** | [v1.0.0 Release](https://github.com/Abdelmalek-Beladam/uav-address-verification/releases/tag/v1.0.0) |
 
-To run fresh inference, download est.pt and place it in models/selected_detector/best.pt. See [docs/RUN_GUIDE.md](docs/RUN_GUIDE.md) for execution details.
+To run fresh inference, download `best.pt` and place it in `models/selected_detector/best.pt`. See [docs/RUN_GUIDE.md](docs/RUN_GUIDE.md) for execution details.
 
 ---
 
@@ -44,22 +44,22 @@ To run fresh inference, download est.pt and place it in models/selected_detecto
 
 No machine learning frameworks or Node.js required:
 
-`powershell
+```powershell
 # Clone the repository
 git clone https://github.com/Abdelmalek-Beladam/uav-address-verification.git
 cd uav-address-verification
 
 # Start a local HTTP server
 python -m http.server 8088 --directory website --bind 127.0.0.1
-`
+```
 
-Open **[http://127.0.0.1:8088/](http://127.0.0.1:8088/)** in your browser. *(On Windows, you can also double-click OPEN_DASHBOARD.bat)*.
+Open **[http://127.0.0.1:8088/](http://127.0.0.1:8088/)** in your browser. *(On Windows, you can also double-click `OPEN_DASHBOARD.bat`)*.
 
 ### 2. Python Verification Environment & Tests
 
 For geospatial verification and running tests:
 
-`ash
+```bash
 # Create and activate virtual environment
 python -m venv .venv
 
@@ -73,13 +73,13 @@ pip install -r requirements.txt
 
 # Run unit tests
 python -m unittest discover -s tests -t .
-`
+```
 
 ---
 
 ## 📁 Repository Structure
 
-`	ext
+```text
 ├── src/plateverif/       # Core Python library: matching, triangulation, verification
 ├── website/              # Production browser review dashboard & map interface
 ├── models/               # Model card and configuration specifications
@@ -88,7 +88,7 @@ python -m unittest discover -s tests -t .
 ├── docs/                 # System architecture, data formats, and guides
 ├── tools/                # Pipeline runners and dashboard generation utilities
 └── tests/                # Unit and regression test suite
-`
+```
 
 ---
 
