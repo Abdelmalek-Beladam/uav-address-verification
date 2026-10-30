@@ -1,0 +1,74 @@
+# Default settings of plateverif. Copy only the keys you want to change into
+# your own file and pass it with --config.
+
+[photos]
+# Photos further than this from the target street are skipped (column distance_to_street_m).
+max_distance_to_street_m = 12.0
+# Views used to decide whether an address was in view (missing-plate check).
+coverage_views = ["left", "right"]
+# Crop projection: "rectilinear" (perspective crop of the 360 photo) or "linear".
+projection = "rectilinear"
+# true when a negative pitch means the crop looks downward.
+pitch_positive_up = true
+
+[addresses]
+# Official addresses further than this from every usable photo are ignored.
+scope_radius_m = 40.0
+# Use the Paris label angle (A_NVOIE) to know which way each facade faces.
+use_facade_orientation = true
+# A facade is visible when the camera is within this angle of its front direction.
+max_facade_view_angle_deg = 80.0
+
+[tracking]
+# Detections of the same plate must be at most this many photos apart.
+max_frame_gap = 3
+# Maximum distance between the sight lines of one plate (metres).
+max_track_residual_m = 2.0
+# Minimum angle between sight lines to compute a position.
+min_triangulation_angle_deg = 5.0
+# Valid distance between camera and plate.
+min_depth_m = 1.0
+max_depth_m = 30.0
+# Assumed camera-to-facade distance when a position cannot be computed (display only).
+nominal_depth_m = 7.0
+# Plate groups matched to the same address and closer than this are merged.
+merge_distance_m = 2.5
+
+[matching]
+# Maximum distance between a located plate and an official address.
+max_match_distance_m = 4.0
+# Single sight line: maximum distance between the line and an official address.
+max_ray_offset_m = 3.0
+# A number found closer than this to its official position is not called out of place.
+out_of_place_min_m = 8.0
+
+[calibration]
+# Estimate and remove a constant GPS offset of the sequence.
+enabled = true
+search_radius_m = 12.0
+min_anchors = 3
+max_spread_m = 2.5
+max_offset_m = 15.0
+
+[coverage]
+# An address counts as clearly in view of a photo when it is within this distance
+# range, inside the horizontal field of view minus the edge margin, and its facade
+# faces the camera within max_facade_angle_deg. Kept strict on purpose: these
+# views are the evidence for "Plate not found".
+min_visible_m = 2.0
+max_visible_m = 15.0
+edge_margin_deg = 5.0
+max_facade_angle_deg = 60.0
+# Number of photos in which an address must be in view before "Plate not found" is reported.
+min_views_for_missing = 2
+
+[decision]
+# Share of readings that must agree on the number.
+min_reading_agreement = 0.6
+# Model-mode quality gates (manual detections use 1.0).
+min_detection_conf = 0.5
+min_ocr_conf = 0.5
+# "Out of place" needs this many photos unless the distance is at least twice the limit.
+min_views_out_of_place = 2
+# false = compare house numbers only; suffixes (bis, ter, A) are ignored.
+compare_suffix = true

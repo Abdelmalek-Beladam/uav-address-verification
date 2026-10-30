@@ -1,0 +1,10 @@
+# Full-image runner dependency inputs, NOT a frozen or newly validated environment.
+# Keep an existing working environment. Do not install these for website viewing.
+# Ultralytics pin observed in Amira's saved notebook; full OCR versions were not frozen.
+ultralytics==8.4.183
+paddleocr>=3,<4
+paddlepaddle>=3,<4
+opencv-python>=4.8,<5
+Pillow>=9
+numpy>=1.24
+pandas>=2.0

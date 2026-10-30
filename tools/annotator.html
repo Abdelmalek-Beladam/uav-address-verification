@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PlateCheck annotator</title>
+<style>
+:root{--line:#d0d7de;--muted:#59636e;--blue:#0969da;--bg:#f6f8fa}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:#1f2328;height:100vh;display:flex;flex-direction:column}
+header{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line)}
+header b{margin-right:8px}
+button,select{font:inherit;font-size:13px;padding:6px 10px;border:1px solid var(--line);border-radius:6px;background:#fff;cursor:pointer}
+button.primary{background:var(--blue);color:#fff;border-color:var(--blue)}
+#progress{margin-left:auto;color:var(--muted);font-size:13px}
+main{flex:1;display:grid;grid-template-columns:minmax(0,1fr) 320px;min-height:0}
+#stage{overflow:auto;background:#24292f;display:flex;align-items:flex-start;justify-content:flex-start}
+canvas{cursor:crosshair;display:block}
+aside{border-left:1px solid var(--line);padding:12px;overflow:auto;font-size:13px}
+aside h2{font-size:14px;margin:0 0 6px;word-break:break-all}
+.nav{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.box{display:flex;gap:6px;align-items:center;margin:4px 0}
+.box input{width:110px;font:inherit;padding:4px 6px;border:1px solid var(--line);border-radius:4px}
+.tag{display:inline-block;padding:1px 8px;border-radius:10px;font-size:12px;background:var(--bg);border:1px solid var(--line)}
+.done{background:#dafbe1;border-color:#1a7f37}
+.help{color:var(--muted);line-height:1.5;margin-top:14px}
+kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 4px;font-size:12px;background:var(--bg)}
+.empty{color:#d0d7de;padding:40px}
+</style>
+</head>
+<body>
+<header>
+  <b>PlateCheck annotator</b>
+  <button id="openBtn" class="primary">Open crops folder</button>
+  <input type="file" id="folder" webkitdirectory directory multiple hidden>
+  <label>View <select id="viewFilter"><option value="">all</option><option value="left">left</option><option value="right">right</option><option value="forward">forward</option></select></label>
+  <label><input type="checkbox" id="todoOnly"> not reviewed only</label>
+  <button id="importBtn">Import CSV</button>
+  <input type="file" id="csvIn" accept=".csv" hidden>
+  <button id="exportDet">Export detections.csv</button>
+  <button id="exportRev">Export reviewed.csv</button>
+  <span id="progress"></span>
+</header>
+<main>
+  <section id="stage"><div class="empty" id="emptyMsg">Open the folder that contains left_side/ and right_side/ crops.</div><canvas id="cv" hidden></canvas></section>
+  <aside>
+    <h2 id="name">No image</h2>
+    <div><span class="tag" id="viewTag">view: -</span> <span class="tag" id="revTag">not reviewed</span></div>
+    <div class="nav">
+      <button id="prev">Previous</button>
+      <button id="next" class="primary">Done, next</button>
+      <button id="noPlate">No plate here</button>
+    </div>
+    <div class="nav"><button id="zoomOut">Zoom -</button><button id="zoomIn">Zoom +</button><button id="undo">Undo last box</button></div>
+    <div id="boxes"></div>
+    <div class="help">
+      Draw a tight box around each house-number plate, then type the number exactly as written (12, 12 bis, 17 A). Type <b>?</b> if a plate is there but cannot be read.<br>
+      Draw a box in every crop where the plate appears, even if it was already boxed in the previous crop.<br>
+      Click <b>No plate here</b> when the crop has no plate, so it counts as checked.<br>
+      Do not look at the expected numbers while labelling, to avoid bias.<br><br>
+      Shortcuts: <kbd>&rarr;</kbd> done and next, <kbd>&larr;</kbd> previous, <kbd>N</kbd> no plate, <kbd>Z</kbd> undo, <kbd>+</kbd>/<kbd>-</kbd> zoom.<br>
+      Work is saved in this browser automatically. Export both CSV files at the end.
+    </div>
+  </aside>
+</main>
+<script>
+(function () {
+  const KEY = 'plateverif-annotator-v1';
+  const st = {files: [], list: [], idx: 0, zoom: 1, ann: {}, reviewed: {}, img: null, url: null, drag: null};
+  const $ = id => document.getElementById(id);
+  const cv = $('cv'), ctx = cv.getContext('2d');
+
+  try { const s = JSON.parse(localStorage.getItem(KEY) || '{}'); st.ann = s.ann || {}; st.reviewed = s.reviewed || {}; } catch (e) {}
+  const save = () => localStorage.setItem(KEY, JSON.stringify({ann: st.ann, reviewed: st.reviewed}));
+
+  function viewOf(path) {
+    const p = path.toLowerCase().replace(/\\/g, '/');
+    for (const v of ['left', 'right', 'forward']) {
+      if (p.includes('/' + v + '_side/') || p.includes('/' + v + '/') || p.includes('_' + v + '.')) return v;
+    }
+    return '';
+  }
+  const baseName = p => p.split(/[\\/]/).pop();
+
+  function rebuild() {
+    const vf = $('viewFilter').value, todo = $('todoOnly').checked;
+    st.list = st.files.filter(f => (!vf || f.view === vf) && (!todo || !st.reviewed[f.name]));
+    if (st.idx >= st.list.length) st.idx = Math.max(0, st.list.length - 1);
+    show();
+  }
+
+  $('openBtn').onclick = () => $('folder').click();
+  $('folder').onchange = e => {
+    const files = Array.from(e.target.files).filter(f => /\.(jpe?g|png)$/i.test(f.name));
+    const path = f => f.webkitRelativePath || f.name;
+    st.files = files.map(f => ({file: f, name: baseName(f.name), view: viewOf(path(f))}))
+      .filter(f => f.view !== '' || true)
+      .sort((a, b) => a.name.localeCompare(b.name, undefined, {numeric: true}));
+    const counts = {};
+    st.files.forEach(f => counts[f.name] = (counts[f.name] || 0) + 1);
+    const dup = Object.keys(counts).filter(k => counts[k] > 1);
+    if (dup.length) alert('Warning: some file names appear twice (e.g. ' + dup[0] + '). Open one dataset folder at a time.');
+    st.idx = 0;
+    rebuild();
+  };
+  $('viewFilter').onchange = rebuild;
+  $('todoOnly').onchange = rebuild;
+
+  function current() { return st.list[st.idx]; }
+
+  function show() {
+    const f = current();
+    updateProgress();
+    if (!f) { $('name').textContent = 'No image'; cv.hidden = true; $('emptyMsg').hidden = false; $('boxes').innerHTML = ''; return; }
+    $('emptyMsg').hidden = true; cv.hidden = false;
+    $('name').textContent = `${st.idx + 1}/${st.list.length}  ${f.name}`;
+    $('viewTag').textContent = 'view: ' + (f.view || 'unknown');
+    if (st.url) URL.revokeObjectURL(st.url);
+    st.url = URL.createObjectURL(f.file);
+    const img = new Image();
+    img.onload = () => { st.img = img; draw(); };
+    img.src = st.url;
+    listBoxes();
+  }
+
+  function scale() {
+    if (!st.img) return 1;
+    const stage = $('stage');
+    const fit = Math.min((stage.clientWidth - 4) / st.img.naturalWidth, (stage.clientHeight - 4) / st.img.naturalHeight);
+    return fit * st.zoom;
+  }
+
+  function draw() {
+    const f = current(); if (!f || !st.img) return;
+    const s = scale();
+    cv.width = Math.round(st.img.naturalWidth * s); cv.height = Math.round(st.img.naturalHeight * s);
+    ctx.drawImage(st.img, 0, 0, cv.width, cv.height);
+    ctx.lineWidth = 2; ctx.font = '14px system-ui, sans-serif';
+    (st.ann[f.name] || []).forEach((b, i) => {
+      ctx.strokeStyle = '#ffd33d'; ctx.strokeRect(b.x1 * s, b.y1 * s, (b.x2 - b.x1) * s, (b.y2 - b.y1) * s);
+      const label = `${i + 1}: ${b.text}`; const w = ctx.measureText(label).width + 8;
+      ctx.fillStyle = '#ffd33d'; ctx.fillRect(b.x1 * s, Math.max(0, b.y1 * s - 18), w, 18);
+      ctx.fillStyle = '#000'; ctx.fillText(label, b.x1 * s + 4, Math.max(13, b.y1 * s - 5));
+    });
+    if (st.drag) {
+      const d = st.drag; ctx.strokeStyle = '#2f81f7';
+      ctx.strokeRect(Math.min(d.x0, d.x) * s, Math.min(d.y0, d.y) * s, Math.abs(d.x - d.x0) * s, Math.abs(d.y - d.y0) * s);
+    }
+    const rev = !!st.reviewed[f.name];
+    $('revTag').textContent = rev ? 'reviewed' : 'not reviewed';
+    $('revTag').classList.toggle('done', rev);
+  }
+
+  function pos(e) {
+    const r = cv.getBoundingClientRect(), s = scale();
+    const x = Math.min(Math.max((e.clientX - r.left) / s, 0), st.img.naturalWidth);
+    const y = Math.min(Math.max((e.clientY - r.top) / s, 0), st.img.naturalHeight);
+    return {x, y};
+  }
+  cv.addEventListener('mousedown', e => { if (!st.img) return; const p = pos(e); st.drag = {x0: p.x, y0: p.y, x: p.x, y: p.y}; });
+  window.addEventListener('mousemove', e => { if (!st.drag) return; const p = pos(e); st.drag.x = p.x; st.drag.y = p.y; draw(); });
+  window.addEventListener('mouseup', () => {
+    const d = st.drag; st.drag = null; if (!d) return;
+    const f = current();
+    const b = {x1: Math.min(d.x0, d.x), y1: Math.min(d.y0, d.y), x2: Math.max(d.x0, d.x), y2: Math.max(d.y0, d.y)};
+    if (b.x2 - b.x1 < 3 || b.y2 - b.y1 < 3) { draw(); return; }
+    const text = prompt('House number on this plate (e.g. 12, 12 bis, 17 A). Type ? if it cannot be read.');
+    if (text === null || text.trim() === '') { draw(); return; }
+    b.text = text.trim(); b.iw = st.img.naturalWidth; b.ih = st.img.naturalHeight;
+    (st.ann[f.name] = st.ann[f.name] || []).push(b);
+    save(); draw(); listBoxes(); updateProgress();
+  });
+
+  function listBoxes() {
+    const f = current(); const el = $('boxes');
+    const boxes = f ? (st.ann[f.name] || []) : [];
+    el.innerHTML = boxes.length ? '<b>Plates in this image</b>' : '<span class="tag">no box yet</span>';
+    boxes.forEach((b, i) => {
+      const row = document.createElement('div'); row.className = 'box';
+      const inp = document.createElement('input'); inp.value = b.text;
+      inp.onchange = () => { b.text = inp.value.trim() || '?'; save(); draw(); };
+      const del = document.createElement('button'); del.textContent = 'Delete';
+      del.onclick = () => { boxes.splice(i, 1); save(); draw(); listBoxes(); updateProgress(); };
+      row.append(`${i + 1}.`, inp, del); el.appendChild(row);
+    });
+  }
+
+  function updateProgress() {
+    const total = st.files.length, done = st.files.filter(f => st.reviewed[f.name]).length;
+    const nBoxes = Object.values(st.ann).reduce((n, a) => n + a.length, 0);
+    $('progress').textContent = total ? `${done}/${total} crops reviewed, ${nBoxes} plates boxed` : '';
+  }
+
+  function go(delta, markReviewed) {
+    const f = current(); if (!f) return;
+    if (markReviewed) { st.reviewed[f.name] = true; save(); }
+    const todo = $('todoOnly').checked;
+    if (todo && markReviewed) { rebuild(); return; }
+    st.idx = Math.min(Math.max(st.idx + delta, 0), st.list.length - 1); show();
+  }
+  $('next').onclick = () => go(1, true);
+  $('prev').onclick = () => go(-1, false);
+  $('noPlate').onclick = () => { const f = current(); if (!f) return; if ((st.ann[f.name] || []).length && !confirm('This image has boxes. Remove them and mark it as having no plate?')) return; delete st.ann[f.name]; go(1, true); };
+  $('undo').onclick = () => { const f = current(); if (!f || !(st.ann[f.name] || []).length) return; st.ann[f.name].pop(); save(); draw(); listBoxes(); updateProgress(); };
+  $('zoomIn').onclick = () => { st.zoom = Math.min(st.zoom * 1.5, 8); draw(); };
+  $('zoomOut').onclick = () => { st.zoom = Math.max(st.zoom / 1.5, 1); draw(); };
+  window.addEventListener('resize', draw);
+  document.addEventListener('keydown', e => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+    if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); go(1, true); }
+    else if (e.key === 'ArrowLeft') { e.preventDefault(); go(-1, false); }
+    else if (e.key === 'n' || e.key === 'N') $('noPlate').click();
+    else if (e.key === 'z' || e.key === 'Z') $('undo').click();
+    else if (e.key === '+' || e.key === '=') $('zoomIn').click();
+    else if (e.key === '-') $('zoomOut').click();
+  });
+
+  const q = v => { const s = String(v); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+  function download(name, text) {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob(['\ufeff' + text], {type: 'text/csv;charset=utf-8'}));
+    a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }
+  const viewByName = name => { const f = st.files.find(x => x.name === name); return f ? f.view : ''; };
+  $('exportDet').onclick = () => {
+    const lines = ['image,view,x_min,y_min,x_max,y_max,image_width,image_height,text,source'];
+    Object.keys(st.ann).sort().forEach(name => st.ann[name].forEach(b => lines.push([name, viewByName(name), b.x1.toFixed(1), b.y1.toFixed(1), b.x2.toFixed(1), b.y2.toFixed(1), b.iw, b.ih, b.text, 'manual'].map(q).join(','))));
+    download('detections.csv', lines.join('\n') + '\n');
+  };
+  $('exportRev').onclick = () => {
+    const names = Object.keys(st.reviewed).filter(k => st.reviewed[k]).sort();
+    download('reviewed.csv', ['image,view'].concat(names.map(n => [n, viewByName(n)].map(q).join(','))).join('\n') + '\n');
+  };
+
+  function parseCsv(text) {
+    const rows = []; let row = [], cell = '', inQ = false;
+    text = text.replace(/^\ufeff/, '');
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (inQ) { if (c === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else inQ = false; } else cell += c; }
+      else if (c === '"') inQ = true;
+      else if (c === ',') { row.push(cell); cell = ''; }
+      else if (c === '\n' || c === '\r') { if (c === '\r' && text[i + 1] === '\n') i++; row.push(cell); rows.push(row); row = []; cell = ''; }
+      else cell += c;
+    }
+    if (cell !== '' || row.length) { row.push(cell); rows.push(row); }
+    return rows.filter(r => r.some(v => v !== ''));
+  }
+  $('importBtn').onclick = () => $('csvIn').click();
+  $('csvIn').onchange = async e => {
+    const file = e.target.files[0]; if (!file) return;
+    const rows = parseCsv(await file.text()); const head = rows.shift().map(h => h.trim());
+    const col = n => head.indexOf(n);
+    if (col('image') < 0) { alert('The CSV needs an "image" column.'); return; }
+    let nb = 0;
+    rows.forEach(r => {
+      const name = baseName(r[col('image')]); st.reviewed[name] = true;
+      if (col('x_min') >= 0 && r[col('x_min')] !== undefined && r[col('x_min')] !== '') {
+        (st.ann[name] = st.ann[name] || []).push({x1: +r[col('x_min')], y1: +r[col('y_min')], x2: +r[col('x_max')], y2: +r[col('y_max')], iw: +r[col('image_width')] || 0, ih: +r[col('image_height')] || 0, text: r[col('text')] || '?'});
+        nb++;
+      }
+    });
+    save(); show(); alert(`Imported ${rows.length} rows (${nb} boxes).`); e.target.value = '';
+  };
+
+  updateProgress();
+})();
+</script>
+</body>
+</html>

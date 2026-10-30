@@ -1,0 +1,27 @@
+{
+  "warning": "SYNTHETIC DATA - for testing the method only",
+  "street_id": "750004691",
+  "gps_bias_east_north_m": [
+    1.8,
+    -1.2
+  ],
+  "gps_noise_m": 0.6,
+  "heading_noise_deg": 1.0,
+  "photo_spacing_m": 4.0,
+  "expected_status_by_number": {
+    "9": "NOT_FOUND",
+    "12": "SUFFIX_MISMATCH",
+    "14": "OUT_OF_PLACE",
+    "17": "CORRECT",
+    "19": "WRONG_SIDE",
+    "23": "UNKNOWN_NUMBER",
+    "25": "UNREADABLE"
+  },
+  "extra_plate": {
+    "text": "96",
+    "expected": "NO_ADDRESS_NEARBY",
+    "nearest_address_m": 12.5
+  },
+  "photos": 55,
+  "detections": 53
+}

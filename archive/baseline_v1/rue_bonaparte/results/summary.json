@@ -1,0 +1,113 @@
+{
+  "tool": "plateverif",
+  "version": "0.3.2",
+  "mode": "verify",
+  "generated_at": "2026-10-24T18:00:57+00:00",
+  "photos": {
+    "total": 190,
+    "usable": 190,
+    "skipped": 0,
+    "skip_reasons": {},
+    "reviewed_views": null
+  },
+  "detections": {
+    "total": 168,
+    "used": 168,
+    "ignored": 0,
+    "unreadable": 17
+  },
+  "plates": {
+    "total": 107,
+    "by_status": {
+      "CORRECT": 58,
+      "UNCERTAIN": 30,
+      "UNREADABLE": 11,
+      "OUT_OF_PLACE": 5,
+      "UNKNOWN_NUMBER": 2,
+      "NO_ADDRESS_NEARBY": 1
+    }
+  },
+  "addresses": {
+    "in_scope": 152,
+    "reported": 97,
+    "by_status": {
+      "CORRECT": 52,
+      "NOT_FOUND": 21,
+      "NOT_COVERED": 15,
+      "UNCERTAIN": 6,
+      "UNREADABLE": 2,
+      "UNKNOWN_NUMBER": 1
+    }
+  },
+  "calibration": {
+    "enabled": true,
+    "applied": true,
+    "anchors": 43,
+    "offset_east_m": 0.68,
+    "offset_north_m": 0.76,
+    "spread_m": 2.36,
+    "offset_m": 1.02
+  },
+  "frame_origin": {
+    "lat": 48.85654391433684,
+    "lon": 2.3337145860578947
+  },
+  "config": {
+    "photos": {
+      "max_distance_to_street_m": 12.0,
+      "coverage_views": [
+        "left",
+        "right"
+      ],
+      "projection": "rectilinear",
+      "pitch_positive_up": true
+    },
+    "addresses": {
+      "scope_radius_m": 40.0,
+      "use_facade_orientation": true,
+      "max_facade_view_angle_deg": 80.0
+    },
+    "tracking": {
+      "max_frame_gap": 3,
+      "max_track_residual_m": 2.0,
+      "min_triangulation_angle_deg": 5.0,
+      "min_depth_m": 1.0,
+      "max_depth_m": 30.0,
+      "nominal_depth_m": 7.0,
+      "merge_distance_m": 2.5
+    },
+    "matching": {
+      "max_match_distance_m": 4.0,
+      "max_ray_offset_m": 3.0,
+      "out_of_place_min_m": 8.0,
+      "relaxed_match_distance_m": 12.0,
+      "frontage_match_max_m": 25.0
+    },
+    "calibration": {
+      "enabled": true,
+      "search_radius_m": 12.0,
+      "min_anchors": 3,
+      "max_spread_m": 2.5,
+      "max_offset_m": 15.0
+    },
+    "coverage": {
+      "min_visible_m": 2.0,
+      "max_visible_m": 15.0,
+      "edge_margin_deg": 5.0,
+      "max_facade_angle_deg": 60.0,
+      "min_views_for_missing": 2
+    },
+    "decision": {
+      "min_reading_agreement": 0.6,
+      "min_detection_conf": 0.5,
+      "min_ocr_conf": 0.5,
+      "min_views_out_of_place": 2,
+      "compare_suffix": false,
+      "partial_read_check": true,
+      "strict_error_claims": true
+    }
+  },
+  "warnings": [
+    "Numbers only: suffixes (bis, ter, A) are not compared."
+  ]
+}

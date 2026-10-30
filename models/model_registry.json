@@ -1,0 +1,61 @@
+{
+  "selected_checkpoint": {
+    "user_archive_path": "yolo_runs/amira_model/best.pt",
+    "bytes": 5567237,
+    "sha256": "27ce0faed13002bf5fdd363a4e49d0cfa7edbce5b7a613da4ae09fb82446764b",
+    "exact_matches_in_amira_archive": [
+      "yolo_runs/yolo26n_img1280_b8_s0/weights/best.pt"
+    ]
+  },
+  "selected_training_configuration": {
+    "task": "detect",
+    "mode": "train",
+    "model": "yolo26n.pt",
+    "epochs": 50,
+    "batch": 8,
+    "imgsz": 1280,
+    "seed": 0,
+    "deterministic": true,
+    "optimizer": "auto",
+    "lr0": 0.01,
+    "lrf": 0.01,
+    "patience": 100,
+    "pretrained": true,
+    "split": "val",
+    "fraction": 1.0,
+    "single_cls": false,
+    "classes": null,
+    "close_mosaic": 10,
+    "augment": false,
+    "rect": false,
+    "workers": 8,
+    "device": ""
+  },
+  "training_epochs_recorded": 50,
+  "best_validation_map50_95_row_epoch": 30,
+  "saved_test_comparison_row": {
+    "model": "yolo26n.pt",
+    "imgsz": "1280",
+    "batch": "8",
+    "seed": "0",
+    "mAP50": "0.8634139868050539",
+    "mAP50-95": "0.6409994775003226",
+    "precision": "0.9170657413672552",
+    "recall": "0.7979862035711002",
+    "inference_ms": "15.803009159990323",
+    "params_M": "2.533886",
+    "weights_MB": "5.567237"
+  },
+  "runtime_evidence": {
+    "amira_training_saved_notebook": "Ultralytics 8.4.183; Python 3.13.15; PyTorch 2.11.0+cu130; saved runtime reports Tesla T4",
+    "abdelmalek_detector_experiment_saved_notebook": "Ultralytics 8.4.184; Python 3.13.15; PyTorch 2.11.0+cu130; NVIDIA L4",
+    "street_pipeline_notebook_source": "Pins Ultralytics 8.4.183; PaddleOCR/PaddlePaddle installs are not fully version-pinned"
+  },
+  "limitations": [
+    "Checkpoint matched by SHA-256; no checkpoint deserialization or new inference performed.",
+    "Original dataset image/label split files are not bundled in these uploaded run archives.",
+    "Repeated model comparisons used split=test; do not describe model-selection results as a fresh unbiased final test.",
+    "Recorded runtime lines do not establish a full exact environment lock.",
+    "Imagery/dataset redistribution rights, final team roles and deployment/submission links still require confirmation."
+  ]
+}

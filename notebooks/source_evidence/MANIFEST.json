@@ -1,0 +1,26 @@
+[
+  {
+    "source_archive": "Amira",
+    "source_path": "Untitled0.ipynb",
+    "original_sha256": "d1328a44cb8e8e77d7fa7a7fb7b98fe67e27f946b86be0d66f3e25e589929ee9",
+    "sanitized_copy": "amira_detector_training.ipynb",
+    "sanitized_sha256": "a3688452806f5daf8f8c19a6339fa7d2539c525904a5d1cbd34b50432694aa06",
+    "changes": "Outputs, execution counts, session metadata removed; cell source retained."
+  },
+  {
+    "source_archive": "Abdelmalek",
+    "source_path": "Colab Notebooks/streets_pipeline.ipynb",
+    "original_sha256": "4a5b115991f5270ec42e03291831405b386fe08047c7f6bcb1c97094bbfebb82",
+    "sanitized_copy": "street_pipeline_history.ipynb",
+    "sanitized_sha256": "5e725fcbd713c05475640496bea66fc3eb0a627a4e1392acdafdba6714911ecb",
+    "changes": "Outputs, execution counts, session metadata removed; cell source retained."
+  },
+  {
+    "source_archive": "Abdelmalek",
+    "source_path": "Colab Notebooks/Copy of my_addressing.ipynb",
+    "original_sha256": "11c49c34a9131ad8e86c2d6e208511cd3dc63ef44a635c64a51ef68c50feb374",
+    "sanitized_copy": "abdelmalek_detector_experiments.ipynb",
+    "sanitized_sha256": "27b51514c9ee88db24563096246b699d7c710077aefed6f1bc78062f372177ed",
+    "changes": "Outputs, execution counts, session metadata removed; cell source retained."
+  }
+]

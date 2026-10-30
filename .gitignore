@@ -1,0 +1,25 @@
+# Local environments, credentials and caches
+.venv/
+venv/
+node_modules/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.env
+.env.*
+!.env.example
+.DS_Store
+Thumbs.db
+# Private source material, model binaries and generated work
+private-handoff/
+local-private/
+.agents/
+scratch/
+build/
+dist/
+*.pt
+*.onnx
+*.zip
+*.log
+/data/local-private/

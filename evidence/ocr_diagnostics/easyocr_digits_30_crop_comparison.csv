@@ -1,0 +1,31 @@
+item,street,image,human_reading,previous_pipeline_reading,easyocr_digits,easyocr_confidence
+1,rue_bonaparte,left_side/000075_left.jpg,not a house number,,905,0.6910267765872496
+2,rue_bonaparte,left_side/000155_left.jpg,not a house number,,0,0.9354813380285556
+3,rue_bonaparte,right_side/000103_right.jpg,1,,0,0.9965597228579668
+4,rue_bonaparte,right_side/000086_right.jpg,11,,4,0.5169590025816184
+5,rue_bonaparte,right_side/000085_right.jpg,11,,0,0.2982546583044865
+6,rue_bonaparte,left_side/000067_left.jpg,20,220,24,0.3106098124059307
+7,rue_bonaparte,left_side/000121_left.jpg,?,7,6,0.3095590732981499
+8,rue_bonaparte,left_side/000102_left.jpg,?,17,4,0.2010429348112277
+9,rue_bonaparte,right_side/000061_right.jpg,?,88,788,0.10780842239395698
+10,rue_bonaparte,left_side/000168_left.jpg,11,1,0,0.991200103537281
+11,rue_bonaparte,left_side/000183_left.jpg,not a house number,2,2,0.4343041481661203
+12,rue_bonaparte,left_side/000132_left.jpg,17,17,17,0.7246112441492254
+13,rue_bonaparte,right_side/000183_right.jpg,14,14,04,0.5043063417583
+14,rue_bonaparte,left_side/000133_left.jpg,17,17,717,0.4682159125804901
+15,rue_bonaparte,left_side/000158_left.jpg,7,7,1,0.1085925747649732
+16,rue_de_four,left_side/000262_left.jpg,11,,4,0.11252827777458752
+17,rue_de_four,left_side/000186_left.jpg,1,,0,0.1990207355847815
+18,rue_de_four,left_side/000442_left.jpg,11,,4,0.11069064786751426
+19,rue_de_four,left_side/000098_left.jpg,1,,0,0.4528343867802995
+20,rue_de_four,left_side/000189_left.jpg,1,,1,0.3872766139113679
+21,rue_de_four,left_side/000240_left.jpg,not a house number,1,8,0.29925007221112665
+22,rue_de_four,right_side/000431_right.jpg,6,6,62,0.43578890961752054
+23,rue_de_four,left_side/000514_left.jpg,1,1,0,0.39362632347616966
+24,rue_de_four,left_side/000231_left.jpg,16,3,8,0.13406601287728392
+25,rue_de_four,right_side/000038_right.jpg,not a house number,6,6,0.9995279869256137
+26,rue_de_four,right_side/000417_right.jpg,31,31,6,0.2599324006742485
+27,rue_de_four,left_side/000157_left.jpg,91,91,9,0.744870501691878
+28,rue_de_four,left_side/000296_left.jpg,23,23,23,0.8802585618674152
+29,rue_de_four,right_side/000110_right.jpg,8,8,0,0.7725339277257639
+30,rue_de_four,left_side/000517_left.jpg,72,72,723,0.43481674166468104

@@ -1,0 +1,21 @@
+# Example settings file. Only write the values you want to change;
+# everything else keeps the default (see: python -m plateverif show-config).
+# Use it with: python -m plateverif verify ... --config config/example.toml
+
+[photos]
+# Photos whose GPS point is further than this from the street are skipped.
+max_distance_to_street_m = 12.0
+
+[matching]
+# A plate is linked to an official address only if they are this close.
+max_match_distance_m = 4.0
+# A number found this far (or more) from its official position is "Out of place".
+out_of_place_min_m = 8.0
+
+[calibration]
+# Set to false to keep the raw GPS positions.
+enabled = true
+
+[coverage]
+# Photos in which an address must be clearly in view before "Plate not found".
+min_views_for_missing = 2

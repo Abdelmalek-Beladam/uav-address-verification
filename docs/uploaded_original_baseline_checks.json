@@ -1,0 +1,52 @@
+[
+  {
+    "survey": "rue_bonaparte",
+    "file": "addresses.csv",
+    "uploaded_original_equals_preserved_baseline": true
+  },
+  {
+    "survey": "rue_bonaparte",
+    "file": "plates.csv",
+    "uploaded_original_equals_preserved_baseline": true
+  },
+  {
+    "survey": "rue_bonaparte",
+    "file": "detections.csv",
+    "uploaded_original_equals_preserved_baseline": true
+  },
+  {
+    "survey": "rue_bonaparte",
+    "file": "photos.csv",
+    "uploaded_original_equals_preserved_baseline": true
+  },
+  {
+    "survey": "rue_bonaparte",
+    "file": "expected_views.csv",
+    "uploaded_original_equals_preserved_baseline": true
+  },
+  {
+    "survey": "rue_de_four",
+    "file": "addresses.csv",
+    "uploaded_original_equals_preserved_baseline": true
+  },
+  {
+    "survey": "rue_de_four",
+    "file": "plates.csv",
+    "uploaded_original_equals_preserved_baseline": true
+  },
+  {
+    "survey": "rue_de_four",
+    "file": "detections.csv",
+    "uploaded_original_equals_preserved_baseline": true
+  },
+  {
+    "survey": "rue_de_four",
+    "file": "photos.csv",
+    "uploaded_original_equals_preserved_baseline": true
+  },
+  {
+    "survey": "rue_de_four",
+    "file": "expected_views.csv",
+    "uploaded_original_equals_preserved_baseline": true
+  }
+]

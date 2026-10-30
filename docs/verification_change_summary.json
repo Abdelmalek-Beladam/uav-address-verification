@@ -1,0 +1,210 @@
+{
+  "ocr_abstentions": [
+    {
+      "survey": "rue_bonaparte",
+      "image": "left_side/000018_left.jpg",
+      "box": 0,
+      "raw_ocr": "7-11",
+      "before": "7",
+      "after": "?"
+    },
+    {
+      "survey": "rue_bonaparte",
+      "image": "right_side/000070_right.jpg",
+      "box": 1,
+      "raw_ocr": "1Z",
+      "before": "1",
+      "after": "?"
+    },
+    {
+      "survey": "rue_bonaparte",
+      "image": "right_side/000085_right.jpg",
+      "box": 0,
+      "raw_ocr": "I1",
+      "before": "1",
+      "after": "?"
+    },
+    {
+      "survey": "rue_bonaparte",
+      "image": "left_side/000141_left.jpg",
+      "box": 0,
+      "raw_ocr": "2I",
+      "before": "2",
+      "after": "?"
+    },
+    {
+      "survey": "rue_de_four",
+      "image": "right_side/000044_right.jpg",
+      "box": 0,
+      "raw_ocr": "I1Z",
+      "before": "1",
+      "after": "?"
+    },
+    {
+      "survey": "rue_de_four",
+      "image": "right_side/000046_right.jpg",
+      "box": 0,
+      "raw_ocr": "1Z",
+      "before": "1",
+      "after": "?"
+    },
+    {
+      "survey": "rue_de_four",
+      "image": "right_side/000047_right.jpg",
+      "box": 0,
+      "raw_ocr": "1Z",
+      "before": "1",
+      "after": "?"
+    },
+    {
+      "survey": "rue_de_four",
+      "image": "left_side/000151_left.jpg",
+      "box": 0,
+      "raw_ocr": "&7",
+      "before": "7",
+      "after": "?"
+    },
+    {
+      "survey": "rue_de_four",
+      "image": "right_side/000170_right.jpg",
+      "box": 0,
+      "raw_ocr": "Z6",
+      "before": "6",
+      "after": "?"
+    },
+    {
+      "survey": "rue_de_four",
+      "image": "left_side/000176_left.jpg",
+      "box": 2,
+      "raw_ocr": "D7",
+      "before": "7",
+      "after": "?"
+    },
+    {
+      "survey": "rue_de_four",
+      "image": "left_side/000179_left.jpg",
+      "box": 1,
+      "raw_ocr": "E2",
+      "before": "2",
+      "after": "?"
+    },
+    {
+      "survey": "rue_de_four",
+      "image": "left_side/000180_left.jpg",
+      "box": 0,
+      "raw_ocr": "E3",
+      "before": "3",
+      "after": "?"
+    },
+    {
+      "survey": "rue_de_four",
+      "image": "left_side/000217_left.jpg",
+      "box": 0,
+      "raw_ocr": "I5",
+      "before": "5",
+      "after": "?"
+    },
+    {
+      "survey": "rue_de_four",
+      "image": "left_side/000231_left.jpg",
+      "box": 0,
+      "raw_ocr": "T3",
+      "before": "3",
+      "after": "?"
+    },
+    {
+      "survey": "rue_de_four",
+      "image": "left_side/000234_left.jpg",
+      "box": 0,
+      "raw_ocr": "1G.",
+      "before": "1",
+      "after": "?"
+    },
+    {
+      "survey": "rue_de_four",
+      "image": "left_side/000240_left.jpg",
+      "box": 0,
+      "raw_ocr": "1o6",
+      "before": "1",
+      "after": "?"
+    },
+    {
+      "survey": "rue_de_four",
+      "image": "left_side/000266_left.jpg",
+      "box": 0,
+      "raw_ocr": "I5",
+      "before": "5",
+      "after": "?"
+    },
+    {
+      "survey": "rue_de_four",
+      "image": "right_side/000432_right.jpg",
+      "box": 1,
+      "raw_ocr": "5]",
+      "before": "5",
+      "after": "?"
+    },
+    {
+      "survey": "rue_de_four",
+      "image": "left_side/000451_left.jpg",
+      "box": 0,
+      "raw_ocr": "1Z",
+      "before": "1",
+      "after": "?"
+    },
+    {
+      "survey": "rue_de_four",
+      "image": "left_side/000462_left.jpg",
+      "box": 0,
+      "raw_ocr": "2I",
+      "before": "2",
+      "after": "?"
+    },
+    {
+      "survey": "rue_de_four",
+      "image": "left_side/000518_left.jpg",
+      "box": 1,
+      "raw_ocr": "72\"",
+      "before": "72",
+      "after": "?"
+    }
+  ],
+  "comparisons": [
+    {
+      "survey": "rue_bonaparte",
+      "kind": "plates",
+      "before": 107,
+      "after": 106,
+      "identical_groups": 104,
+      "status_changes_in_identical_groups": 3,
+      "new_or_regrouped_groups": 2
+    },
+    {
+      "survey": "rue_bonaparte",
+      "kind": "addresses",
+      "before": 97,
+      "after": 97,
+      "identical_groups": 97,
+      "status_changes_in_identical_groups": 2,
+      "new_or_regrouped_groups": 0
+    },
+    {
+      "survey": "rue_de_four",
+      "kind": "plates",
+      "before": 192,
+      "after": 193,
+      "identical_groups": 189,
+      "status_changes_in_identical_groups": 9,
+      "new_or_regrouped_groups": 4
+    },
+    {
+      "survey": "rue_de_four",
+      "kind": "addresses",
+      "before": 149,
+      "after": 149,
+      "identical_groups": 149,
+      "status_changes_in_identical_groups": 6,
+      "new_or_regrouped_groups": 0
+    }
+  ]
+}

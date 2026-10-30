@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "plateverif"
+version = "0.3.2"
+description = "Verification of house-number plates in street photos against the official address register"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=1.24",
+    "pandas>=2.0",
+    "tomli>=2.0; python_version < '3.11'",
+]
+
+[project.optional-dependencies]
+images = ["Pillow>=9.0"]
+dev = ["pytest>=7.0"]
+
+[project.scripts]
+plateverif = "plateverif.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+plateverif = ["default_config.toml", "templates/*.html", "data/*.csv"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

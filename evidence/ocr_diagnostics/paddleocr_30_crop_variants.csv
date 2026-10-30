@@ -1,0 +1,181 @@
+item,street,human,previous,saved_raw,variant,raw,confidence
+1,rue_bonaparte,not a house number,,0O,original,0O,0.5341729521751404
+1,rue_bonaparte,not a house number,,0O,original_border,,0.0
+1,rue_bonaparte,not a house number,,0O,contrast,0O,0.4876549243927002
+1,rue_bonaparte,not a house number,,0O,contrast_border,00,0.48130300641059875
+1,rue_bonaparte,not a house number,,0O,inverted,0O,0.5109572410583496
+1,rue_bonaparte,not a house number,,0O,inverted_border,00,0.543021023273468
+2,rue_bonaparte,not a house number,,L,original,L,0.5051284432411194
+2,rue_bonaparte,not a house number,,L,original_border,0,0.8624643087387085
+2,rue_bonaparte,not a house number,,L,contrast,L,0.669829249382019
+2,rue_bonaparte,not a house number,,L,contrast_border,0,0.2012007236480713
+2,rue_bonaparte,not a house number,,L,inverted,L,0.5630367398262024
+2,rue_bonaparte,not a house number,,L,inverted_border,I,0.21415811777114868
+3,rue_bonaparte,1,,0,original,0,0.8102315068244934
+3,rue_bonaparte,1,,0,original_border,I,0.7186377644538879
+3,rue_bonaparte,1,,0,contrast,0,0.7684566378593445
+3,rue_bonaparte,1,,0,contrast_border,I,0.612627387046814
+3,rue_bonaparte,1,,0,inverted,0,0.7335867285728455
+3,rue_bonaparte,1,,0,inverted_border,0,0.4463782012462616
+4,rue_bonaparte,11,,I,original,I,0.233084037899971
+4,rue_bonaparte,11,,I,original_border,I,0.554366409778595
+4,rue_bonaparte,11,,I,contrast,U,0.23907534778118134
+4,rue_bonaparte,11,,I,contrast_border,I,0.31408536434173584
+4,rue_bonaparte,11,,I,inverted,I,0.5584467649459839
+4,rue_bonaparte,11,,I,inverted_border,I,0.3873010575771332
+5,rue_bonaparte,11,,I,original,I,0.42625483870506287
+5,rue_bonaparte,11,,I,original_border,I,0.32561880350112915
+5,rue_bonaparte,11,,I,contrast,E,0.9059180021286011
+5,rue_bonaparte,11,,I,contrast_border,Ⅲ,0.3619133234024048
+5,rue_bonaparte,11,,I,inverted,E,0.7613296508789062
+5,rue_bonaparte,11,,I,inverted_border,ⅢI,0.5108077526092529
+6,rue_bonaparte,20,220,220,original,2299,0.6326589584350586
+6,rue_bonaparte,20,220,220,original_border,,0.0
+6,rue_bonaparte,20,220,220,contrast,$2299,0.6091971397399902
+6,rue_bonaparte,20,220,220,contrast_border,,0.0
+6,rue_bonaparte,20,220,220,inverted,$2299,0.6344748735427856
+6,rue_bonaparte,20,220,220,inverted_border,4,0.44551777839660645
+7,rue_bonaparte,?,7,7,original,0,0.3994520604610443
+7,rue_bonaparte,?,7,7,original_border,,0.0
+7,rue_bonaparte,?,7,7,contrast,0,0.2558536231517792
+7,rue_bonaparte,?,7,7,contrast_border,B,0.26162296533584595
+7,rue_bonaparte,?,7,7,inverted,0,0.33207911252975464
+7,rue_bonaparte,?,7,7,inverted_border,0,0.1768094152212143
+8,rue_bonaparte,?,17,17,original,17,0.7309425473213196
+8,rue_bonaparte,?,17,17,original_border,I,0.7561385631561279
+8,rue_bonaparte,?,17,17,contrast,17,0.44586068391799927
+8,rue_bonaparte,?,17,17,contrast_border,I,0.47455155849456787
+8,rue_bonaparte,?,17,17,inverted,17,0.5400681495666504
+8,rue_bonaparte,?,17,17,inverted_border,I,0.5081457495689392
+9,rue_bonaparte,?,88,88,original,89,0.9187426567077637
+9,rue_bonaparte,?,88,88,original_border,89,0.8711805939674377
+9,rue_bonaparte,?,88,88,contrast,89,0.7740710973739624
+9,rue_bonaparte,?,88,88,contrast_border,B9,0.5182285308837891
+9,rue_bonaparte,?,88,88,inverted,89,0.7961511611938477
+9,rue_bonaparte,?,88,88,inverted_border,B9,0.4505065381526947
+10,rue_bonaparte,11,1,1,original,E,0.9276553988456726
+10,rue_bonaparte,11,1,1,original_border,,0.0
+10,rue_bonaparte,11,1,1,contrast,E,0.9042064547538757
+10,rue_bonaparte,11,1,1,contrast_border,E,0.7456865310668945
+10,rue_bonaparte,11,1,1,inverted,E,0.8970963358879089
+10,rue_bonaparte,11,1,1,inverted_border,E,0.7054575085639954
+11,rue_bonaparte,not a house number,2,2,original,2,0.5201666951179504
+11,rue_bonaparte,not a house number,2,2,original_border,B,0.2376149445772171
+11,rue_bonaparte,not a house number,2,2,contrast,2,0.8485919237136841
+11,rue_bonaparte,not a house number,2,2,contrast_border,H,0.35656774044036865
+11,rue_bonaparte,not a house number,2,2,inverted,2,0.8281320333480835
+11,rue_bonaparte,not a house number,2,2,inverted_border,B,0.3147389590740204
+12,rue_bonaparte,17,17,17,original,17,0.9178535342216492
+12,rue_bonaparte,17,17,17,original_border,I7,0.8322968482971191
+12,rue_bonaparte,17,17,17,contrast,17,0.7304852604866028
+12,rue_bonaparte,17,17,17,contrast_border,I7,0.8092386722564697
+12,rue_bonaparte,17,17,17,inverted,17,0.737001359462738
+12,rue_bonaparte,17,17,17,inverted_border,I7,0.7104934453964233
+13,rue_bonaparte,14,14,14,original,[4,0.9602164030075073
+13,rue_bonaparte,14,14,14,original_border,4,0.6756283044815063
+13,rue_bonaparte,14,14,14,contrast,14,0.9795535802841187
+13,rue_bonaparte,14,14,14,contrast_border,4,0.8255177736282349
+13,rue_bonaparte,14,14,14,inverted,14,0.9971243143081665
+13,rue_bonaparte,14,14,14,inverted_border,4,0.5122820734977722
+14,rue_bonaparte,17,17,17,original,17,0.983833909034729
+14,rue_bonaparte,17,17,17,original_border,I7,0.847944974899292
+14,rue_bonaparte,17,17,17,contrast,17,0.9817394018173218
+14,rue_bonaparte,17,17,17,contrast_border,I7,0.7010091543197632
+14,rue_bonaparte,17,17,17,inverted,17,0.9733240604400635
+14,rue_bonaparte,17,17,17,inverted_border,17,0.7529311180114746
+15,rue_bonaparte,7,7,7,original,Z,0.6126635074615479
+15,rue_bonaparte,7,7,7,original_border,7,0.9520578980445862
+15,rue_bonaparte,7,7,7,contrast,Z,0.7495991587638855
+15,rue_bonaparte,7,7,7,contrast_border,7,0.9336844682693481
+15,rue_bonaparte,7,7,7,inverted,Z,0.8168349862098694
+15,rue_bonaparte,7,7,7,inverted_border,7,0.3863784074783325
+16,rue_de_four,11,,II,original,II,0.9002768993377686
+16,rue_de_four,11,,II,original_border,Ⅱ,0.35409724712371826
+16,rue_de_four,11,,II,contrast,II,0.5192388296127319
+16,rue_de_four,11,,II,contrast_border,Ⅱ,0.4560508131980896
+16,rue_de_four,11,,II,inverted,E,0.5752103328704834
+16,rue_de_four,11,,II,inverted_border,Ⅱ,0.40751826763153076
+17,rue_de_four,1,,D,original,D,0.6642327904701233
+17,rue_de_four,1,,D,original_border,I,0.733427882194519
+17,rue_de_four,1,,D,contrast,D,0.7541625499725342
+17,rue_de_four,1,,D,contrast_border,I,0.8014637231826782
+17,rue_de_four,1,,D,inverted,D,0.7179675102233887
+17,rue_de_four,1,,D,inverted_border,I,0.7649256587028503
+18,rue_de_four,11,,II,original,WI,0.6826085448265076
+18,rue_de_four,11,,II,original_border,Ⅱ,0.4869629442691803
+18,rue_de_four,11,,II,contrast,WI,0.6701483726501465
+18,rue_de_four,11,,II,contrast_border,Ⅱ,0.5891817808151245
+18,rue_de_four,11,,II,inverted,WI,0.6178058385848999
+18,rue_de_four,11,,II,inverted_border,Ⅱ,0.5470613837242126
+19,rue_de_four,1,,I,original,I,0.7409807443618774
+19,rue_de_four,1,,I,original_border,I,0.9503377079963684
+19,rue_de_four,1,,I,contrast,0,0.2976129949092865
+19,rue_de_four,1,,I,contrast_border,I,0.7624183297157288
+19,rue_de_four,1,,I,inverted,I,0.4527527689933777
+19,rue_de_four,1,,I,inverted_border,I,0.3982895016670227
+20,rue_de_four,1,,I,original,I,0.45297446846961975
+20,rue_de_four,1,,I,original_border,I,0.6335630416870117
+20,rue_de_four,1,,I,contrast,I,0.6012353897094727
+20,rue_de_four,1,,I,contrast_border,I,0.41138607263565063
+20,rue_de_four,1,,I,inverted,I,0.4233763515949249
+20,rue_de_four,1,,I,inverted_border,I,0.41340240836143494
+21,rue_de_four,not a house number,1,1o6,original,LoGS,0.19957837462425232
+21,rue_de_four,not a house number,1,1o6,original_border,D,0.46220213174819946
+21,rue_de_four,not a house number,1,1o6,contrast,oG,0.5656854510307312
+21,rue_de_four,not a house number,1,1o6,contrast_border,,0.0
+21,rue_de_four,not a house number,1,1o6,inverted,LOG,0.3646338880062103
+21,rue_de_four,not a house number,1,1o6,inverted_border, ,0.5676121115684509
+22,rue_de_four,6,6,6,original,①,0.15630950033664703
+22,rue_de_four,6,6,6,original_border,④,0.3034280240535736
+22,rue_de_four,6,6,6,contrast,⑤,0.2802315354347229
+22,rue_de_four,6,6,6,contrast_border,7,0.21004872024059296
+22,rue_de_four,6,6,6,inverted,⑤,0.41351446509361267
+22,rue_de_four,6,6,6,inverted_border,t,0.43188750743865967
+23,rue_de_four,1,1,1,original,1I,0.4354233741760254
+23,rue_de_four,1,1,1,original_border,II,0.702810525894165
+23,rue_de_four,1,1,1,contrast,11,0.4629984498023987
+23,rue_de_four,1,1,1,contrast_border,I,0.5713205933570862
+23,rue_de_four,1,1,1,inverted,E,0.24351602792739868
+23,rue_de_four,1,1,1,inverted_border,I,0.4006907641887665
+24,rue_de_four,16,3,T3,original,1C,0.363037645816803
+24,rue_de_four,16,3,T3,original_border,,0.0
+24,rue_de_four,16,3,T3,contrast,13,0.38070517778396606
+24,rue_de_four,16,3,T3,contrast_border,B,0.4017025828361511
+24,rue_de_four,16,3,T3,inverted,13,0.4532277286052704
+24,rue_de_four,16,3,T3,inverted_border,,0.0
+25,rue_de_four,not a house number,6,6,original,G,0.9431032538414001
+25,rue_de_four,not a house number,6,6,original_border,G,0.8361422419548035
+25,rue_de_four,not a house number,6,6,contrast,G,0.9520539045333862
+25,rue_de_four,not a house number,6,6,contrast_border,G,0.384957492351532
+25,rue_de_four,not a house number,6,6,inverted,G,0.8355878591537476
+25,rue_de_four,not a house number,6,6,inverted_border,G,0.39976438879966736
+26,rue_de_four,31,31,31,original,31,0.9815846085548401
+26,rue_de_four,31,31,31,original_border,81,0.5037611126899719
+26,rue_de_four,31,31,31,contrast,31,0.9560730457305908
+26,rue_de_four,31,31,31,contrast_border,B0,0.5160390138626099
+26,rue_de_four,31,31,31,inverted,31,0.9194552898406982
+26,rue_de_four,31,31,31,inverted_border,B1,0.3918260931968689
+27,rue_de_four,91,91,91,original,91,0.9986696243286133
+27,rue_de_four,91,91,91,original_border,91,0.970723032951355
+27,rue_de_four,91,91,91,contrast,91,0.9977849721908569
+27,rue_de_four,91,91,91,contrast_border,91,0.8554129004478455
+27,rue_de_four,91,91,91,inverted,91,0.9963807463645935
+27,rue_de_four,91,91,91,inverted_border,91,0.7380311489105225
+28,rue_de_four,23,23,23,original,23,0.9982035160064697
+28,rue_de_four,23,23,23,original_border,23,0.9978188276290894
+28,rue_de_four,23,23,23,contrast,23,0.9986830949783325
+28,rue_de_four,23,23,23,contrast_border,23,0.9887178540229797
+28,rue_de_four,23,23,23,inverted,23,0.9980436563491821
+28,rue_de_four,23,23,23,inverted_border,23,0.9936119318008423
+29,rue_de_four,8,8,8,original,8,0.9854978322982788
+29,rue_de_four,8,8,8,original_border,B,0.6278239488601685
+29,rue_de_four,8,8,8,contrast,8,0.9943641424179077
+29,rue_de_four,8,8,8,contrast_border,8,0.6986548900604248
+29,rue_de_four,8,8,8,inverted,8,0.9878298044204712
+29,rue_de_four,8,8,8,inverted_border,B,0.4482954144477844
+30,rue_de_four,72,72,72,original,72,0.9950277209281921
+30,rue_de_four,72,72,72,original_border,2,0.4307837188243866
+30,rue_de_four,72,72,72,contrast,72,0.9923583269119263
+30,rue_de_four,72,72,72,contrast_border,72,0.4788113236427307
+30,rue_de_four,72,72,72,inverted,72,0.9779964685440063
+30,rue_de_four,72,72,72,inverted_border,2,0.5055075883865356

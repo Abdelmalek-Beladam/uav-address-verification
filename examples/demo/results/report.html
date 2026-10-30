@@ -1,0 +1,1058 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>plateverif - address plate report</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+:root{
+  --primary:#1a73e8;--ink:#0b1c30;--ink-2:#414754;--muted:#64748b;--line:rgba(15,23,42,.08);
+  --glass:rgba(255,255,255,.84);--glass-border:rgba(255,255,255,.9);
+  --shadow:0 18px 40px -14px rgba(15,23,42,.24),0 2px 6px rgba(15,23,42,.06);
+  --shadow-sm:0 1px 3px rgba(15,23,42,.08);
+  --font:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,Consolas,'Courier New',monospace;
+  --gap:16px;--top:16px;--bar-h:64px;--cards-top:92px;--panel-w:360px;--drawer-h:280px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden}
+body{font:14px/1.45 var(--font);color:var(--ink);background:#e9eef5;-webkit-font-smoothing:antialiased}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.glass{background:var(--glass);border:1px solid var(--glass-border);box-shadow:var(--shadow);border-radius:20px}
+@supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  .glass{-webkit-backdrop-filter:blur(22px) saturate(170%);backdrop-filter:blur(22px) saturate(170%)}
+}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.glass{background:rgba(255,255,255,.97)}}
+.mono{font-family:var(--mono)}
+.sub{color:var(--muted);font-size:12px}
+
+/* Map */
+#map{position:absolute;inset:0;z-index:0;background:#e5e9f0}
+#map-off{position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);z-index:5;width:min(440px,calc(100% - 32px));padding:16px 20px;text-align:center;color:var(--ink-2);font-size:13px}
+.leaflet-container{font:12px/1.4 var(--font);background:#e5e9f0}
+.tiles-soft{filter:saturate(.6) brightness(1.03)}
+#map .leaflet-top.leaflet-right{top:calc(var(--cards-top) - 10px);right:calc(var(--panel-w) + var(--gap))}
+#map .leaflet-bottom.leaflet-right{bottom:calc(var(--drawer-h) + var(--gap));right:calc(var(--panel-w) + var(--gap))}
+#map .leaflet-bar{border:0;border-radius:12px;overflow:hidden;box-shadow:var(--shadow)}
+#map .leaflet-bar a{width:34px;height:34px;line-height:34px;background:rgba(255,255,255,.94);color:var(--ink-2);border-bottom:1px solid rgba(203,213,225,.7);display:flex;align-items:center;justify-content:center}
+#map .leaflet-bar a:last-child{border-bottom:0}
+#map .leaflet-bar a:hover{background:#fff;color:var(--primary)}
+#map .leaflet-bar a svg{width:16px;height:16px}
+#map .leaflet-control-layers{border:0;border-radius:12px;box-shadow:var(--shadow);background:rgba(255,255,255,.95);font:12px/1.5 var(--font)}
+#map .leaflet-control-layers-expanded{padding:8px 12px}
+#map .leaflet-control-attribution{margin:0 10px 6px 0;padding:2px 8px;border-radius:8px;background:rgba(255,255,255,.82);font-size:10.5px;color:#475569}
+#map .leaflet-control-attribution a{color:#334155}
+.leaflet-tooltip{font:12px/1.35 var(--font);border-radius:8px;border:0;box-shadow:var(--shadow-sm);padding:4px 8px}
+.pmark div{width:12px;height:12px;margin:2px;transform:rotate(45deg);border:2px solid #fff;box-shadow:0 0 0 1px rgba(15,23,42,.65),0 2px 4px rgba(0,0,0,.25)}
+
+/* Top bar */
+#topbar{position:absolute;z-index:30;top:var(--top);left:var(--gap);right:var(--gap);height:var(--bar-h);display:flex;align-items:center;gap:14px;padding:0 12px}
+.logo{flex:none;width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#3b82f6,#4f46e5);color:#fff;display:grid;place-items:center;box-shadow:0 4px 12px rgba(59,130,246,.35)}
+.logo svg{width:20px;height:20px}
+.titles{min-width:0;flex:1}
+.titles h1{margin:0;font-size:15px;font-weight:700;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#subtitle{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.badge{display:inline-block;margin-left:8px;padding:0 8px;border-radius:999px;font-size:11px;font-weight:600;background:#fef3c7;color:#92400e;border:1px solid #fde68a}
+.actions{display:flex;gap:8px;flex:none}
+.btn{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 12px;border-radius:12px;border:1px solid rgba(15,23,42,.1);background:rgba(255,255,255,.85);cursor:pointer;font-size:13px;font-weight:500;box-shadow:var(--shadow-sm)}
+.btn:hover{background:#fff;color:var(--primary)}
+.btn svg{width:16px;height:16px;flex:none}
+
+/* Result cards */
+#cards{position:absolute;z-index:20;top:var(--cards-top);left:var(--gap);max-width:calc(100% - var(--panel-w) - 3 * var(--gap) - 52px);display:flex;gap:10px;overflow-x:auto;padding:2px 2px 8px;scrollbar-width:thin}
+.cgroup{display:flex;align-items:center;gap:6px;flex:none;padding:5px 6px 5px 12px;border-radius:999px}
+.cgroup-label{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-right:2px}
+.card{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 11px 0 4px;border-radius:999px;border:1px solid transparent;background:rgba(255,255,255,.72);cursor:pointer;white-space:nowrap;font-size:12px}
+.card:hover{background:#fff;border-color:rgba(15,23,42,.1)}
+.card.on{background:#fff;border-color:var(--primary);box-shadow:0 0 0 2px rgba(26,115,232,.2)}
+.card .ic{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;flex:none}
+.card .ic svg{width:13px;height:13px}
+.card b{font-size:13px;font-weight:800}
+.card .lb{font-weight:600}
+
+/* Legend */
+#legend{position:absolute;z-index:20;left:var(--gap);bottom:calc(var(--drawer-h) + 2 * var(--gap));width:244px;max-height:calc(100% - var(--drawer-h) - var(--cards-top) - 3 * var(--gap) - 44px);display:flex;flex-direction:column;overflow:hidden;border-radius:18px}
+#lg-head{display:flex;align-items:center;justify-content:space-between;width:100%;padding:9px 12px;border:0;background:none;cursor:pointer;font-weight:700;font-size:13px;flex:none}
+#lg-head svg{width:16px;height:16px;transition:transform .2s;color:var(--muted)}
+#legend.closed #lg-head svg{transform:rotate(180deg)}
+#lg-body{overflow-y:auto;padding:0 12px 10px;font-size:12px;min-height:0}
+#legend.closed #lg-body{display:none}
+.lg-t{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:8px 0 2px}
+.lg-t:first-child{margin-top:0}
+.lg{display:flex;align-items:center;gap:8px;padding:2px 0;color:#334155}
+.lg .n{margin-left:auto;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums;padding-left:6px}
+.sym{flex:none;width:20px;display:flex;justify-content:center;align-items:center}
+.dot{width:12px;height:12px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px rgba(15,23,42,.3)}
+.ring{width:9px;height:9px;border-radius:50%;border:1.5px solid #94a3b8;background:#fff}
+.dia{width:10px;height:10px;transform:rotate(45deg);border:1.5px solid #fff;box-shadow:0 0 0 1px rgba(15,23,42,.6)}
+.ln{display:inline-block;width:20px;height:0;border-top:3px solid #475569;flex:none}
+.ln.dash{border-top:2px dashed #1d4ed8}
+.route{display:inline-block;width:20px;height:3px;background:#3b82f6;border-radius:2px;position:relative}
+.route:after{content:'';position:absolute;left:7px;top:-2.5px;width:6px;height:6px;border-radius:50%;background:#2563eb;border:1px solid #1d4ed8}
+.sel-ring{width:13px;height:13px;border-radius:50%;border:2px solid #111827}
+.lg-foot{margin-top:8px;font-size:10.5px;color:var(--muted)}
+
+/* Detail panel */
+#panel{position:absolute;z-index:20;top:var(--cards-top);right:var(--gap);bottom:var(--gap);width:var(--panel-w);display:flex;flex-direction:column;overflow:hidden}
+#panel-body{overflow-y:auto;overflow-x:hidden;padding:18px 18px 22px;flex:1;min-height:0}
+#panel-close{position:absolute;top:10px;right:10px;width:30px;height:30px;border-radius:50%;border:0;background:rgba(241,245,249,.95);cursor:pointer;display:none;place-items:center;color:var(--ink-2);z-index:2}
+#panel-close:hover{background:#e2e8f0}
+#panel-close svg{width:16px;height:16px}
+#panel.has-sel #panel-close{display:grid}
+.kicker{font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+#panel h2{margin:4px 36px 10px 0;font-size:19px;line-height:1.25;font-weight:700;letter-spacing:-.015em;overflow-wrap:anywhere}
+.lead{margin:0 0 10px;font-size:13px;line-height:1.55;color:var(--ink-2)}
+.pill{display:inline-flex;align-items:center;height:24px;padding:0 10px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap;vertical-align:middle}
+.explain{margin:12px 0 4px;padding:10px 12px;border-radius:14px;font-size:13px;line-height:1.5;border:1px solid}
+.sec{margin-top:14px}
+.sec-t{font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+.kv{display:grid;grid-template-columns:minmax(0,42%) minmax(0,1fr);column-gap:12px}
+.kv>div{padding:7px 0;border-top:1px solid var(--line);min-width:0;font-size:13px}
+.kv>div:nth-child(1),.kv>div:nth-child(2){border-top:0}
+.kv>.k{color:var(--muted)}
+.kv>.v{overflow-wrap:anywhere}
+.kv a{color:var(--primary)}
+.chips{display:flex;flex-wrap:wrap;gap:4px}
+.chip{font:500 12px/1.65 var(--mono);padding:0 7px;border-radius:7px;background:rgba(241,245,249,.95);border:1px solid rgba(203,213,225,.85);white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+button.chip{cursor:pointer;color:var(--primary)}
+button.chip:hover{border-color:var(--primary);background:#fff}
+.conf b{text-transform:capitalize;font-size:13px}
+.meter{display:flex;gap:4px;margin:4px 0}
+.meter i{flex:1;height:6px;border-radius:3px;background:rgba(203,213,225,.7)}
+.hint{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);padding:2px 0}
+.exp{padding:6px 0;border-top:1px solid var(--line)}
+.exp:first-of-type{border-top:0}
+.exp ul{margin:2px 0 0;padding-left:18px;font-size:12.5px}
+.exp-h{font-size:13px;font-weight:600}
+details.tech{margin-top:16px;border-top:1px solid var(--line);padding-top:8px}
+details.tech summary{cursor:pointer;font-size:12px;font-weight:600;color:var(--muted)}
+.attn{display:flex;flex-direction:column;gap:6px}
+.attn-row{display:flex;align-items:center;gap:8px;width:100%;padding:6px 10px 6px 6px;border-radius:12px;border:1px solid rgba(203,213,225,.7);background:rgba(255,255,255,.6);cursor:pointer;text-align:left}
+.attn-row:hover{background:#fff;border-color:var(--primary)}
+.attn-row b{margin-left:auto;font-size:14px}
+.warn{margin:0;padding-left:18px;font-size:12.5px;color:#92400e}
+
+/* Table drawer */
+#drawer{position:absolute;z-index:20;left:var(--gap);right:calc(var(--panel-w) + 2 * var(--gap));bottom:var(--gap);height:var(--drawer-h);display:flex;flex-direction:column;overflow:hidden;border-radius:22px}
+#handle{flex:none;height:14px;display:flex;align-items:center;justify-content:center;cursor:ns-resize;touch-action:none}
+#handle span{width:44px;height:4px;border-radius:2px;background:rgba(100,116,139,.45)}
+#handle:hover span,#handle:focus-visible span{background:rgba(100,116,139,.9)}
+#dhead{flex:none;display:flex;align-items:center;gap:10px;padding:0 10px 8px 12px;border-bottom:1px solid var(--line);min-width:0}
+#drawer.collapsed #dhead{border-bottom:0}
+#tabs{display:flex;gap:2px;padding:3px;border-radius:12px;background:rgba(203,213,225,.5);flex:none}
+#tabs button{border:0;background:none;padding:5px 12px;border-radius:9px;cursor:pointer;font-size:13px;font-weight:600;color:#475569;white-space:nowrap}
+#tabs button.on{background:#fff;color:var(--primary);box-shadow:var(--shadow-sm)}
+#tabs .short{display:none}
+.dctrl{margin-left:auto;display:flex;align-items:center;gap:8px;min-width:0}
+.search{position:relative;min-width:0}
+.search svg{position:absolute;left:9px;top:50%;width:14px;height:14px;transform:translateY(-50%);color:var(--muted);pointer-events:none}
+#search{width:210px;max-width:100%;height:32px;padding:0 10px 0 30px;border-radius:10px;border:1px solid rgba(203,213,225,.9);background:rgba(255,255,255,.88);font-size:13px;outline:none}
+#search:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(26,115,232,.15)}
+#count{font-size:12px;font-weight:600;color:var(--muted);white-space:nowrap}
+.icon-btn{width:32px;height:32px;border:0;border-radius:9px;background:none;cursor:pointer;display:grid;place-items:center;color:var(--muted);flex:none}
+.icon-btn:hover{background:rgba(15,23,42,.06);color:var(--ink)}
+.icon-btn svg{width:18px;height:18px;transition:transform .2s}
+#drawer.collapsed #dtoggle svg{transform:rotate(180deg)}
+#twrap{flex:1;min-height:0;overflow:auto}
+#drawer.collapsed #twrap{display:none}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{position:sticky;top:0;z-index:1;background:rgba(248,250,252,.98);text-align:left;font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);padding:9px 10px;border-bottom:1px solid rgba(203,213,225,.8);white-space:nowrap;cursor:pointer;user-select:none}
+th:hover{color:var(--ink)}
+th .arr{margin-left:4px;font-size:9px}
+td{padding:8px 10px;border-top:1px solid rgba(226,232,240,.85);vertical-align:top}
+tbody tr{cursor:pointer}
+tbody tr:hover td{background:rgba(241,245,249,.8)}
+tbody tr.sel td{background:rgba(219,234,254,.7)}
+th:first-child,td:first-child{padding-left:16px}
+td.nowrap{white-space:nowrap}
+td.strong{font-weight:600}
+td.mono{font-family:var(--mono);font-size:12px}
+td.ex{min-width:280px;color:#374151}
+td.empty{padding:18px 16px;color:var(--muted);cursor:default}
+
+/* Help dialog */
+#modal{position:fixed;inset:0;z-index:100;display:none;align-items:center;justify-content:center;background:rgba(15,23,42,.38);padding:16px}
+#modal.open{display:flex}
+#modal .box{width:min(640px,100%);max-height:calc(100vh - 32px);overflow:auto;padding:24px 26px;position:relative;background:rgba(255,255,255,.98);border-radius:22px}
+#modal h2{margin:0 0 8px;font-size:19px}
+#modal h3{margin:18px 0 6px;font-size:14px}
+#modal p{margin:0 0 8px;color:var(--ink-2);font-size:13.5px;line-height:1.6}
+#mclose{position:absolute;top:14px;right:14px}
+.mlist{display:grid;grid-template-columns:max-content 1fr;gap:8px 12px;align-items:center;font-size:13px;color:var(--ink-2)}
+
+/* Small screens */
+@media (max-width:900px){
+  :root{--gap:8px;--top:8px;--bar-h:56px;--cards-top:72px}
+  .btn span{display:none}
+  .btn{padding:0 10px}
+  #cards{max-width:calc(100% - 2 * var(--gap) - 52px)}
+  #drawer{right:var(--gap)}
+  #map .leaflet-top.leaflet-right,#map .leaflet-bottom.leaflet-right{right:0}
+  #panel{top:auto;left:0;right:0;bottom:0;width:auto;max-height:68vh;border-radius:20px 20px 0 0;transform:translateY(105%);transition:transform .25s ease;z-index:40;visibility:hidden}
+  #panel.open{transform:none;visibility:visible}
+  #panel #panel-close{display:grid}
+  #legend{width:210px}
+  #search{width:140px}
+}
+@media (max-width:560px){
+  #count,.cgroup-label{display:none}
+  #tabs .long{display:none}
+  #tabs .short{display:inline}
+  #tabs button{padding:5px 9px;font-size:12px}
+  #search{width:96px}
+  #subtitle{font-size:11px}
+}
+</style>
+</head>
+<body>
+<div id="map" role="region" aria-label="Map"></div>
+<div id="map-off" class="glass" hidden>The map could not be loaded (no internet connection or the map library was blocked). The tables, the detail panel and the export still work.</div>
+
+<header id="topbar" class="glass">
+  <div class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5V20a1 1 0 01-1 1h-5v-6h-6v6H4a1 1 0 01-1-1z"/></svg></div>
+  <div class="titles">
+    <h1>Address plate verification</h1>
+    <div id="subtitle"></div>
+  </div>
+  <div class="actions">
+    <button type="button" class="btn" id="btn-export" title="Download the rows shown in the table as CSV"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg><span>Export CSV</span></button>
+    <button type="button" class="btn" id="btn-help" title="How to read this report"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.1 9a3 3 0 015.8 1c0 2-3 3-3 3M12 17h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span>Help</span></button>
+  </div>
+</header>
+
+<nav id="cards" aria-label="Filter by result"></nav>
+
+<aside id="legend" class="glass" aria-label="Map legend">
+  <button type="button" id="lg-head" aria-expanded="true" aria-controls="lg-body">Legend<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg></button>
+  <div id="lg-body"></div>
+</aside>
+
+<aside id="panel" class="glass" aria-label="Details">
+  <button type="button" id="panel-close" aria-label="Close details"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  <div id="panel-body"></div>
+</aside>
+
+<section id="drawer" class="glass" aria-label="Result tables">
+  <div id="handle" role="slider" tabindex="0" aria-label="Resize the table (drag, or use the arrow keys)" aria-orientation="vertical" aria-valuemin="56"><span></span></div>
+  <div id="dhead">
+    <div id="tabs" role="tablist">
+      <button type="button" role="tab" data-tab="addresses"><span class="long">Addresses</span><span class="short">Addr.</span></button>
+      <button type="button" role="tab" data-tab="plates"><span class="long">Plates</span><span class="short">Plates</span></button>
+      <button type="button" role="tab" data-tab="skipped"><span class="long">Skipped photos</span><span class="short">Skipped</span></button>
+    </div>
+    <div class="dctrl">
+      <label class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 21l-4.3-4.3M17 10.5a6.5 6.5 0 11-13 0 6.5 6.5 0 0113 0z"/></svg><input id="search" type="search" autocomplete="off" aria-label="Search the table"></label>
+      <span id="count" aria-live="polite"></span>
+      <button type="button" class="icon-btn" id="dtoggle" aria-label="Show or hide the table" aria-controls="twrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+    </div>
+  </div>
+  <div id="twrap"></div>
+</section>
+
+<div id="modal" role="dialog" aria-modal="true" aria-labelledby="mtitle">
+  <div class="box">
+    <button type="button" class="icon-btn" id="mclose" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <h2 id="mtitle">How to read this report</h2>
+    <p>The report compares the house-number plates seen in the street photos with the official Paris address register.</p>
+    <h3>Two points of view</h3>
+    <p><b>Addresses (circles)</b> start from the register: is the expected plate visible where it should be? This is the only way to find a missing plate.</p>
+    <p><b>Plates (diamonds)</b> start from the photos: where is this plate, and is its number right for that spot? This is how wrong, misplaced and unknown numbers are found.</p>
+    <h3>How a plate is placed on the map</h3>
+    <p>Each photo gives a sight line from the camera towards the plate (dashed lines). When the same plate is seen in two or more photos, the lines cross at its position. With one photo only, the position is estimated from the distance to the facade, which is less reliable.</p>
+    <h3>Confidence</h3>
+    <p>Confidence says how strong the evidence is: number of photos, agreement of the readings and geometry. It does not change the result. Low-confidence results should be checked first.</p>
+    <h3>Results</h3>
+    <div class="mlist" id="mlist"></div>
+  </div>
+</div>
+
+<script id="report-data" type="application/json">{"summary": {"tool": "plateverif", "version": "0.2.0", "mode": "verify", "generated_at": "2026-10-15T18:19:49+00:00", "photos": {"total": 55, "usable": 54, "skipped": 1, "skip_reasons": {"24.2 m from the street (limit 12 m)": 1}, "reviewed_views": null}, "detections": {"total": 53, "used": 53, "ignored": 0, "unreadable": 2}, "plates": {"total": 31, "by_status": {"CORRECT": 24, "NO_ADDRESS_NEARBY": 1, "UNCERTAIN": 1, "SUFFIX_MISMATCH": 1, "OUT_OF_PLACE": 1, "WRONG_SIDE": 1, "UNKNOWN_NUMBER": 1, "UNREADABLE": 1}}, "addresses": {"in_scope": 56, "reported": 31, "by_status": {"CORRECT": 24, "NOT_FOUND": 1, "SUFFIX_MISMATCH": 1, "OUT_OF_PLACE": 1, "WRONG_SIDE": 1, "UNKNOWN_NUMBER": 1, "UNREADABLE": 1, "NOT_COVERED": 1}}, "calibration": {"enabled": true, "applied": true, "anchors": 17, "offset_east_m": -1.71, "offset_north_m": 1.29, "spread_m": 1.19, "offset_m": 2.14}, "frame_origin": {"lat": 48.85437174285185, "lon": 2.3407763862037037}, "config": {"photos": {"max_distance_to_street_m": 12.0, "coverage_views": ["left", "right"], "projection": "rectilinear", "pitch_positive_up": true}, "addresses": {"scope_radius_m": 40.0, "use_facade_orientation": true, "max_facade_view_angle_deg": 80.0}, "tracking": {"max_frame_gap": 3, "max_track_residual_m": 2.0, "min_triangulation_angle_deg": 5.0, "min_depth_m": 1.0, "max_depth_m": 30.0, "nominal_depth_m": 7.0, "merge_distance_m": 2.5}, "matching": {"max_match_distance_m": 4.0, "max_ray_offset_m": 3.0, "out_of_place_min_m": 8.0}, "calibration": {"enabled": true, "search_radius_m": 12.0, "min_anchors": 3, "max_spread_m": 2.5, "max_offset_m": 15.0}, "coverage": {"min_visible_m": 2.0, "max_visible_m": 15.0, "edge_margin_deg": 5.0, "max_facade_angle_deg": 60.0, "min_views_for_missing": 2}, "decision": {"min_reading_agreement": 0.6, "min_detection_conf": 0.5, "min_ocr_conf": 0.5, "min_views_out_of_place": 2}}, "warnings": [], "demo": true}, "statuses": {"CORRECT": {"label": "Correct", "color": "#1a7f37", "problem": false, "meaning": "The plate shows the official number at this location."}, "WRONG_SIDE": {"label": "Wrong side", "color": "#cf222e", "problem": true, "meaning": "The number exists on this street, but on the opposite side."}, "OUT_OF_PLACE": {"label": "Out of place", "color": "#be185d", "problem": true, "meaning": "The number exists, but its official position is somewhere else."}, "UNKNOWN_NUMBER": {"label": "Unknown number", "color": "#7f1d1d", "problem": true, "meaning": "The number is not in the official list for this street."}, "SUFFIX_MISMATCH": {"label": "Suffix mismatch", "color": "#c2410c", "problem": true, "meaning": "Same number, but the suffix (bis, ter, letter) differs from the official one."}, "NO_ADDRESS_NEARBY": {"label": "No address here", "color": "#7c3aed", "problem": true, "meaning": "No official address at the plate location and the number is not on a nearby street."}, "UNREADABLE": {"label": "Unreadable", "color": "#475569", "problem": false, "meaning": "A plate is present but its number cannot be read."}, "UNCERTAIN": {"label": "Uncertain", "color": "#9ca3af", "problem": false, "meaning": "The evidence is not strong enough for a decision. A person should review it."}, "NOT_FOUND": {"label": "Plate not found", "color": "#d97706", "problem": true, "meaning": "The address was in view in several photos, but no plate was found."}, "NOT_COVERED": {"label": "Not enough views", "color": "#cbd5e1", "problem": false, "meaning": "The address was in view in too few photos to be judged."}, "IN_VIEW": {"label": "In view", "color": "#2563eb", "problem": false, "meaning": "Inspection mode: the address should be visible in the listed photos."}}, "geojson": {"type": "FeatureCollection", "features": [{"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.340770699, 48.8547647]}, "properties": {"kind": "photo", "sequence_number": 1, "picture_id": "7dbe4267-1e9c-413d-9f4a-ae2924170947", "datetime": "2025-05-05T05:42:35.931000+00:00", "lat": 48.8547647, "lon": 2.340770699, "lat_corrected": 48.85477627141057, "lon_corrected": 2.340747310599077, "travel_bearing": 136.735, "distance_to_street_m": 24.221, "valid": false, "skip_reason": "24.2 m from the street (limit 12 m)", "source_url": "https://panoramax.ign.fr/api/pictures/7dbe4267-1e9c-413d-9f4a-ae2924170947/hd.jpg", "n_detections": 0}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.341479570599077, 48.855212620410576]}, "properties": {"kind": "photo", "sequence_number": 2, "picture_id": "demo-000002", "datetime": "2025-05-05T05:43:00+00:00", "lat": 48.855201049, "lon": 2.341502959, "lat_corrected": 48.855212620410576, "lon_corrected": 2.341479570599077, "travel_bearing": 214.013, "distance_to_street_m": 2.081, "valid": true, "skip_reason": "", "source_url": "", "n_detections": 0}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.341446459599077, 48.85517614841057]}, "properties": {"kind": "photo", "sequence_number": 3, "picture_id": "demo-000003", "datetime": "2025-05-05T05:43:02+00:00", "lat": 48.855164577, "lon": 2.341469848, "lat_corrected": 48.85517614841057, "lon_corrected": 2.341446459599077, "travel_bearing": 214.058, "distance_to_street_m": 2.346, "valid": true, "skip_reason": "", "source_url": "", "n_detections": 1}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.341414095599077, 48.85514555741057]}, "properties": {"kind": "photo", "sequence_number": 4, "picture_id": "demo-000004", "datetime": "2025-05-05T05:43:04+00:00", "lat": 48.855133986, "lon": 2.341437484, "lat_corrected": 48.85514555741057, "lon_corrected": 2.341414095599077, "travel_bearing": 214.082, "distance_to_street_m": 2.29, "valid": true, "skip_reason": "", "source_url": "", "n_detections": 1}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.3413874225990767, 48.855128098410574]}, "properties": {"kind": "photo", "sequence_number": 5, "picture_id": "demo-000005", "datetime": "2025-05-05T05:43:06+00:00", "lat": 48.855116527, "lon": 2.341410811, "lat_corrected": 48.855128098410574, "lon_corrected": 2.3413874225990767, "travel_bearing": 214.085, "distance_to_street_m": 1.757, "valid": true, "skip_reason": "", "source_url": "", "n_detections": 1}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.341352005599077, 48.85508747541058]}, "properties": {"kind": "photo", "sequence_number": 6, "picture_id": "demo-000006", "datetime": "2025-05-05T05:43:08+00:00", "lat": 48.855075904, "lon": 2.341375394, "lat_corrected": 48.85508747541058, "lon_corrected": 2.341352005599077, "travel_bearing": 214.066, "distance_to_street_m": 2.145, "valid": true, "skip_reason": "", "source_url": "", "n_detections": 1}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.341329195599077, 48.855062697410574]}, "properties": {"kind": "photo", "sequence_number": 7, "picture_id": "demo-000007", "datetime": "2025-05-05T05:43:10+00:00", "lat": 48.855051126, "lon": 2.341352584, "lat_corrected": 48.855062697410574, "lon_corrected": 2.341329195599077, "travel_bearing": 214.027, "distance_to_street_m": 2.306, "valid": true, "skip_reason": "", "source_url": "", "n_detections": 0}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.341295222599077, 48.85502568441058]}, "properties": {"kind": "photo", "sequence_number": 8, "picture_id": "demo-000008", "datetime": "2025-05-05T05:43:12+00:00", "lat": 48.855014113, "lon": 2.341318611, "lat_corrected": 48.85502568441058, "lon_corrected": 2.341295222599077, "travel_bearing": 213.967, "distance_to_street_m": 2.548, "valid": true, "skip_reason": "", "source_url": "", "n_detections": 0}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.341263359599077, 48.85500437141057]}, "properties": {"kind": "photo", "sequence_number": 9, "picture_id": "demo-000009", "datetime": "2025-05-05T05:43:14+00:00", "lat": 48.8549928, "lon": 2.341286748, "lat_corrected": 48.85500437141057, "lon_corrected": 2.341263359599077, "travel_bearing": 213.886, "distance_to_street_m": 1.931, "valid": true, "skip_reason": "", "source_url": "", "n_detections": 1}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.341221895599077, 48.85496803741057]}, "properties": {"kind": "photo", "sequence_number": 10, "picture_id": "demo-000010", "datetime": "2025-05-05T05:43:16+00:00", "lat": 48.854956466, "lon": 2.341245284, "lat_corrected": 48.85496803741057, "lon_corrected": 2.341221895599077, "travel_bearing": 213.784, "distance_to_street_m": 1.658, "valid": true, "skip_reason": "", "source_url": "", "n_detections": 0}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.341186745599077, 48.85493340341058]}, "properties": {"kind": "photo", "sequence_number": 11, "picture_id": "demo-000011", "datetime": "2025-05-05T05:43:18+00:00", "lat": 48.854921832, "lon": 2.341210134, "lat_corrected": 48.85493340341058, "lon_corrected": 2.341186745599077, "travel_bearing": 213.66, "distance_to_street_m": 1.654, "valid": true, "skip_reason": "", "source_url": "", "n_detections": 1}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.341156767599077, 48.85490891041057]}, "properties": {"kind": "photo", "sequence_number": 12, "picture_id": "demo-000012", "datetime": "2025-05-05T05:43:20+00:00", "lat": 48.854897339, "lon": 2.341180156, "lat_corrected": 48.85490891041057, "lon_corrected": 2.341156767599077, "travel_bearing": 213.516, "distance_to_street_m": 1.329, "valid": true, "skip_reason": "", "source_url": "", "n_detections": 1}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.341131144599077, 48.85488141441058]}, "properties": {"kind": "photo", "sequence_number": 13, "picture_id": "demo-000013", "datetime": "2025-05-05T05:43:22+00:00", "lat": 48.854869843, "lon": 2.341154533, "lat_corrected": 48.85488141441058, "lon_corrected": 2.341131144599077, "travel_bearing": 213.35, "distance_to_street_m": 1.448, "valid": true, "skip_reason": "", "source_url": "", "n_detections": 0}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.341112644599077, 48.854848664410575]}, "properties": {"kind": "photo", "sequence_number": 14, "picture_id": "demo-000014", "datetime": "2025-05-05T05:43:24+00:00", "lat": 48.854837093, "lon": 2.341136033, "lat_corrected": 48.854848664410575, "lon_corrected": 2.341112644599077, "travel_bearing": 213.164, "distance_to_street_m": 2.318, "valid": true, "skip_reason": "", "source_url": "", "n_detections": 0}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.341060709599077, 48.85481643241057]}, "properties": {"kind": "photo", "sequence_number": 15, "picture_id": "demo-000015", "datetime": "2025-05-05T05:43:26+00:00", "lat": 48.854804861, "lon": 2.341084098, "lat_corrected": 48.85481643241057, "lon_corrected": 2.341060709599077, "travel_bearing": 212.956, "distance_to_street_m": 1.078, "valid": true, "skip_reason": "", "source_url": "", "n_detections": 1}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.341051129599077, 48.854789553410576]}, "properties": {"kind": "photo", "sequence_number": 16, "picture_id": "demo-000016", "datetime": "2025-05-05T05:43:28+00:00", "lat": 48.854777982, "lon": 2.341074518, "lat_corrected": 48.854789553410576, "lon_corrected": 2.341051129599077, "travel_bearing": 212.727, "distance_to_street_m": 2.113, "valid": true, "skip_reason": "", "source_url": "", "n_detections": 2}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.341009364599077, 48.85475589841057]}, "properties": {"kind": "photo", "sequence_number": 17, "picture_id": "demo-000017", "datetime": "2025-05-05T05:43:30+00:00", "lat": 48.854744327, "lon": 2.341032753, "lat_corrected": 48.85475589841057, "lon_corrected": 2.341009364599077, "travel_bearing": 212.476, "distance_to_street_m": 1.55, "valid": true, "skip_reason": "", "source_url": "", "n_detections": 1}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.340984498599077, 48.85472357241058]}, "properties": {"kind": "photo", "sequence_number": 18, "picture_id": "demo-000018", "datetime": "2025-05-05T05:43:32+00:00", "lat": 48.854712001, "lon": 2.341007887, "lat_corrected": 48.85472357241058, "lon_corrected": 2.340984498599077, "travel_bearing": 212.204, "distance_to_street_m": 1.933, "valid": true, "skip_reason": "", "source_url": "", "n_detections": 1}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.3409720775990768, 48.85469295941058]}, "properties": {"kind": "photo", "sequence_number": 19, "picture_id": "demo-000019", "datetime": "2025-05-05T05:43:34+00:00", "lat": 48.854681388, "lon": 2.340995466, "lat_corrected": 48.85469295941058, "lon_corrected": 2.3409720775990768, "travel_bearing": 211.911, "distance_to_street_m": 2.971, "valid": true, "skip_reason": "", "source_url": "", "n_detections": 2}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.340934224599077, 48.85467138241057]}, "properties": {"kind": "photo", "sequence_number": 20, "picture_id": "demo-000020", "datetime": "2025-05-05T05:43:36+00:00", "lat": 48.854659811, "lon": 2.340957613, "lat_corrected": 48.85467138241057, "lon_corrected": 2.340934224599077, "travel_bearing": 211.596, "distance_to_street_m": 1.874, "valid": true, "skip_reason": "", "source_url": "", "n_detections": 1}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.3409011005990767, 48.85463520841058]}, "properties": {"kind": "photo", "sequence_number": 21, "picture_id": "demo-000021", "datetime": "2025-05-05T05:43:38+00:00", "lat": 48.854623637, "lon": 2.340924489, "lat_corrected": 48.85463520841058, "lon_corrected": 2.3409011005990767, "travel_bearing": 211.26, "distance_to_street_m": 1.903, "valid": true, "skip_reason": "", "source_url": "", "n_detections": 1}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.340878483599077, 48.854605257410576]}, "properties": {"kind": "photo", "sequence_number": 22, "picture_id": "demo-000022", "datetime": "2025-05-05T05:43:40+00:00", "lat": 48.854593686, "lon": 2.340901872, "lat_corrected": 48.854605257410576, "lon_corrected": 2.340878483599077, "travel_bearing": 210.902, "distance_to_street_m": 2.204, "valid": true, "skip_reason": "", "source_url": "", "n_detections": 0}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.340839539599077, 48.854574321410574]}, "properties": {"kind": "photo", "sequence_number": 23, "picture_id": "demo-000023", "datetime": "2025-05-05T05:43:42+00:00", "lat": 48.85456275, "lon": 2.340862928, "lat_corrected": 48.854574321410574, "lon_corrected": 2.340839539599077, "travel_bearing": 210.523, "distance_to_street_m": 1.507, "valid": true, "skip_reason": "", "source_url": "", "n_detections": 0}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.340833071599077, 48.85453444941057]}, "properties": {"kind": "photo", "sequence_number": 24, "picture_id": "demo-000024", "datetime": "2025-05-05T05:43:44+00:00", "lat": 48.854522878, "lon": 2.34085646, "lat_corrected": 48.85453444941057, "lon_corrected": 2.340833071599077, "travel_bearing": 210.121, "distance_to_street_m": 3.336, "valid": true, "skip_reason": "", "source_url": "", "n_detections": 0}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.340801669599077, 48.85451221141057]}, "properties": {"kind": "photo", "sequence_number": 25, "picture_id": "demo-000025", "datetime": "2025-05-05T05:43:46+00:00", "lat": 48.85450064, "lon": 2.340825058, "lat_corrected": 48.85451221141057, "lon_corrected": 2.340801669599077, "travel_bearing": 209.699, "distance_to_street_m": 2.574, "valid": true, "skip_reason": "", "source_url": "", "n_detections": 2}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.3407624265990767, 48.85449100941057]}, "properties": {"kind": "photo", "sequence_number": 26, "picture_id": "demo-000026", "datetime": "2025-05-05T05:43:48+00:00", "lat": 48.854479438, "lon": 2.340785815, "lat_corrected": 48.85449100941057, "lon_corrected": 2.3407624265990767, "travel_bearing": 209.255, "distance_to_street_m": 1.235, "valid": true, "skip_reason": "", "source_url": "", "n_detections": 1}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.340747391599077, 48.854442263410576]}, "properties": {"kind": "photo", "sequence_number": 27, "picture_id": "demo-000027", "datetime": "2025-05-05T05:43:50+00:00", "lat": 48.854430692, "lon": 2.34077078, "lat_corrected": 48.854442263410576, "lon_corrected": 2.340747391599077, "travel_bearing": 208.789, "distance_to_street_m": 2.904, "valid": true, "skip_reason": "", "source_url": "", "n_detections": 0}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.340715611599077, 48.854420230410575]}, "properties": {"kind": "photo", "sequence_number": 28, "picture_id": "demo-000028", "datetime": "2025-05-05T05:43:52+00:00", "lat": 48.854408659, "lon": 2.340739, "lat_corrected": 48.854420230410575, "lon_corrected": 2.340715611599077, "travel_bearing": 208.301, "distance_to_street_m": 2.03, "valid": true, "skip_reason": "", "source_url": "", "n_detections": 2}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.340687737599077, 48.85438904741058]}, "properties": {"kind": "photo", "sequence_number": 29, "picture_id": "demo-000029", "datetime": "2025-05-05T05:43:54+00:00", "lat": 48.854377476, "lon": 2.340711126, "lat_corrected": 48.85438904741058, "lon_corrected": 2.340687737599077, "travel_bearing": 207.792, "distance_to_street_m": 1.861, "valid": true, "skip_reason": "", "source_url": "", "n_detections": 2}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.340663468599077, 48.854357059410574]}, "properties": {"kind": "photo", "sequence_number": 30, "picture_id": "demo-000030", "datetime": "2025-05-05T05:43:56+00:00", "lat": 48.854345488, "lon": 2.340686857, "lat_corrected": 48.854357059410574, "lon_corrected": 2.340663468599077, "travel_bearing": 207.262, "distance_to_street_m": 1.931, "valid": true, "skip_reason": "", "source_url": "", "n_detections": 2}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.340651000599077, 48.85431775741058]}, "properties": {"kind": "photo", "sequence_number": 31, "picture_id": "demo-000031", "datetime": "2025-05-05T05:43:58+00:00", "lat": 48.854306186, "lon": 2.340674389, "lat_corrected": 48.85431775741058, "lon_corrected": 2.340651000599077, "travel_bearing": 206.71, "distance_to_street_m": 3.1, "valid": true, "skip_reason": "", "source_url": "", "n_detections": 2}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.340616539599077, 48.854286688410575]}, "properties": {"kind": "photo", "sequence_number": 32, "picture_id": "demo-000032", "datetime": "2025-05-05T05:44:00+00:00", "lat": 48.854275117, "lon": 2.340639928, "lat_corrected": 48.854286688410575, "lon_corrected": 2.340616539599077, "travel_bearing": 206.136, "distance_to_street_m": 2.376, "valid": true, "skip_reason": "", "source_url": "", "n_detections": 1}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.340592084599077, 48.85425040241058]}, "properties": {"kind": "photo", "sequence_number": 33, "picture_id": "demo-000033", "datetime": "2025-05-05T05:44:02+00:00", "lat": 48.854238831, "lon": 2.340615473, "lat_corrected": 48.85425040241058, "lon_corrected": 2.340592084599077, "travel_bearing": 205.542, "distance_to_street_m": 2.517, "valid": true, "skip_reason": "", "source_url": "", "n_detections": 0}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.3405629735990767, 48.854223199410576]}, "properties": {"kind": "photo", "sequence_number": 34, "picture_id": "demo-000034", "datetime": "2025-05-05T05:44:04+00:00", "lat": 48.854211628, "lon": 2.340586362, "lat_corrected": 48.854223199410576, "lon_corrected": 2.3405629735990767, "travel_bearing": 204.926, "distance_to_street_m": 1.873, "valid": true, "skip_reason": "", "source_url": "", "n_detections": 2}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.340552311599077, 48.854197710410574]}, "properties": {"kind": "photo", "sequence_number": 35, "picture_id": "demo-000035", "datetime": "2025-05-05T05:44:06+00:00", "lat": 48.854186139, "lon": 2.3405757, "lat_corrected": 48.854197710410574, "lon_corrected": 2.340552311599077, "travel_bearing": 204.29, "distance_to_street_m": 2.345, "valid": true, "skip_reason": "", "source_url": "", "n_detections": 1}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.340511857599077, 48.85415433341058]}, "properties": {"kind": "photo", "sequence_number": 36, "picture_id": "demo-000036", "datetime": "2025-05-05T05:44:08+00:00", "lat": 48.854142762, "lon": 2.340535246, "lat_corrected": 48.85415433341058, "lon_corrected": 2.340511857599077, "travel_bearing": 203.632, "distance_to_street_m": 1.594, "valid": true, "skip_reason": "", "source_url": "", "n_detections": 0}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.340506356599077, 48.85411477141057]}, "properties": {"kind": "photo", "sequence_number": 37, "picture_id": "demo-000037", "datetime": "2025-05-05T05:44:10+00:00", "lat": 48.8541032, "lon": 2.340529745, "lat_corrected": 48.85411477141057, "lon_corrected": 2.340506356599077, "travel_bearing": 202.955, "distance_to_street_m": 2.953, "valid": true, "skip_reason": "", "source_url": "", "n_detections": 1}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.340476182599077, 48.85409170241058]}, "properties": {"kind": "photo", "sequence_number": 38, "picture_id": "demo-000038", "datetime": "2025-05-05T05:44:12+00:00", "lat": 48.854080131, "lon": 2.340499571, "lat_corrected": 48.85409170241058, "lon_corrected": 2.340476182599077, "travel_bearing": 202.257, "distance_to_street_m": 1.891, "valid": true, "skip_reason": "", "source_url": "", "n_detections": 2}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.340469825599077, 48.854062452410574]}, "properties": {"kind": "photo", "sequence_number": 39, "picture_id": "demo-000039", "datetime": "2025-05-05T05:44:14+00:00", "lat": 48.854050881, "lon": 2.340493214, "lat_corrected": 48.854062452410574, "lon_corrected": 2.340469825599077, "travel_bearing": 201.539, "distance_to_street_m": 2.675, "valid": true, "skip_reason": "", "source_url": "", "n_detections": 1}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.340436994599077, 48.854023042410574]}, "properties": {"kind": "photo", "sequence_number": 40, "picture_id": "demo-000040", "datetime": "2025-05-05T05:44:16+00:00", "lat": 48.854011471, "lon": 2.340460383, "lat_corrected": 48.854023042410574, "lon_corrected": 2.340436994599077, "travel_bearing": 200.802, "distance_to_street_m": 2.014, "valid": true, "skip_reason": "", "source_url": "", "n_detections": 2}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.340418430599077, 48.853999336410574]}, "properties": {"kind": "photo", "sequence_number": 41, "picture_id": "demo-000041", "datetime": "2025-05-05T05:44:18+00:00", "lat": 48.853987765, "lon": 2.340441819, "lat_corrected": 48.853999336410574, "lon_corrected": 2.340418430599077, "travel_bearing": 200.046, "distance_to_street_m": 1.659, "valid": true, "skip_reason": "", "source_url": "", "n_detections": 1}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.340398438599077, 48.853955343410576]}, "properties": {"kind": "photo", "sequence_number": 42, "picture_id": "demo-000042", "datetime": "2025-05-05T05:44:20+00:00", "lat": 48.853943772, "lon": 2.340421827, "lat_corrected": 48.853955343410576, "lon_corrected": 2.340398438599077, "travel_bearing": 199.271, "distance_to_street_m": 1.929, "valid": true, "skip_reason": "", "source_url": "", "n_detections": 1}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.3403869865990767, 48.85392197141057]}, "properties": {"kind": "photo", "sequence_number": 43, "picture_id": "demo-000043", "datetime": "2025-05-05T05:44:22+00:00", "lat": 48.8539104, "lon": 2.340410375, "lat_corrected": 48.85392197141057, "lon_corrected": 2.3403869865990767, "travel_bearing": 198.478, "distance_to_street_m": 2.335, "valid": true, "skip_reason": "", "source_url": "", "n_detections": 2}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.340365320599077, 48.85388202141058]}, "properties": {"kind": "photo", "sequence_number": 44, "picture_id": "demo-000044", "datetime": "2025-05-05T05:44:24+00:00", "lat": 48.85387045, "lon": 2.340388709, "lat_corrected": 48.85388202141058, "lon_corrected": 2.340365320599077, "travel_bearing": 197.667, "distance_to_street_m": 2.195, "valid": true, "skip_reason": "", "source_url": "", "n_detections": 1}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.3403504035990768, 48.85385081241058]}, "properties": {"kind": "photo", "sequence_number": 45, "picture_id": "demo-000045", "datetime": "2025-05-05T05:44:26+00:00", "lat": 48.853839241, "lon": 2.340373792, "lat_corrected": 48.85385081241058, "lon_corrected": 2.3403504035990768, "travel_bearing": 196.84, "distance_to_street_m": 2.173, "valid": true, "skip_reason": "", "source_url": "", "n_detections": 0}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.340344355599077, 48.85382165941058]}, "properties": {"kind": "photo", "sequence_number": 46, "picture_id": "demo-000046", "datetime": "2025-05-05T05:44:28+00:00", "lat": 48.853810088, "lon": 2.340367744, "lat_corrected": 48.85382165941058, "lon_corrected": 2.340344355599077, "travel_bearing": 195.995, "distance_to_street_m": 2.672, "valid": true, "skip_reason": "", "source_url": "", "n_detections": 2}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.340319640599077, 48.85378642241057]}, "properties": {"kind": "photo", "sequence_number": 47, "picture_id": "demo-000047", "datetime": "2025-05-05T05:44:30+00:00", "lat": 48.853774851, "lon": 2.340343029, "lat_corrected": 48.85378642241057, "lon_corrected": 2.340319640599077, "travel_bearing": 195.135, "distance_to_street_m": 1.972, "valid": true, "skip_reason": "", "source_url": "", "n_detections": 2}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.340302869599077, 48.85375291841058]}, "properties": {"kind": "photo", "sequence_number": 48, "picture_id": "demo-000048", "datetime": "2025-05-05T05:44:32+00:00", "lat": 48.853741347, "lon": 2.340326258, "lat_corrected": 48.85375291841058, "lon_corrected": 2.340302869599077, "travel_bearing": 194.26, "distance_to_street_m": 1.728, "valid": true, "skip_reason": "", "source_url": "", "n_detections": 1}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.340292218599077, 48.853714553410576]}, "properties": {"kind": "photo", "sequence_number": 49, "picture_id": "demo-000049", "datetime": "2025-05-05T05:44:34+00:00", "lat": 48.853702982, "lon": 2.340315607, "lat_corrected": 48.853714553410576, "lon_corrected": 2.340292218599077, "travel_bearing": 193.37, "distance_to_street_m": 1.999, "valid": true, "skip_reason": "", "source_url": "", "n_detections": 1}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.3402690895990768, 48.85367717241058]}, "properties": {"kind": "photo", "sequence_number": 50, "picture_id": "demo-000050", "datetime": "2025-05-05T05:44:36+00:00", "lat": 48.853665601, "lon": 2.340292478, "lat_corrected": 48.85367717241058, "lon_corrected": 2.3402690895990768, "travel_bearing": 192.467, "distance_to_street_m": 1.254, "valid": true, "skip_reason": "", "source_url": "", "n_detections": 1}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.340254069599077, 48.85362794341057]}, "properties": {"kind": "photo", "sequence_number": 51, "picture_id": "demo-000051", "datetime": "2025-05-05T05:44:38+00:00", "lat": 48.853616372, "lon": 2.340277458, "lat_corrected": 48.85362794341057, "lon_corrected": 2.340254069599077, "travel_bearing": 191.552, "distance_to_street_m": 1.294, "valid": true, "skip_reason": "", "source_url": "", "n_detections": 1}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.340254499599077, 48.85359741441057]}, "properties": {"kind": "photo", "sequence_number": 52, "picture_id": "demo-000052", "datetime": "2025-05-05T05:44:40+00:00", "lat": 48.853585843, "lon": 2.340277888, "lat_corrected": 48.85359741441057, "lon_corrected": 2.340254499599077, "travel_bearing": 190.624, "distance_to_street_m": 1.987, "valid": true, "skip_reason": "", "source_url": "", "n_detections": 1}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.340248284599077, 48.853577442410575]}, "properties": {"kind": "photo", "sequence_number": 53, "picture_id": "demo-000053", "datetime": "2025-05-05T05:44:42+00:00", "lat": 48.853565871, "lon": 2.340271673, "lat_corrected": 48.853577442410575, "lon_corrected": 2.340248284599077, "travel_bearing": 189.685, "distance_to_street_m": 1.929, "valid": true, "skip_reason": "", "source_url": "", "n_detections": 1}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.340230942599077, 48.85352473041058]}, "properties": {"kind": "photo", "sequence_number": 54, "picture_id": "demo-000054", "datetime": "2025-05-05T05:44:44+00:00", "lat": 48.853513159, "lon": 2.340254331, "lat_corrected": 48.85352473041058, "lon_corrected": 2.340230942599077, "travel_bearing": 188.737, "distance_to_street_m": 1.602, "valid": true, "skip_reason": "", "source_url": "", "n_detections": 1}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.340231168599077, 48.85349322841058]}, "properties": {"kind": "photo", "sequence_number": 55, "picture_id": "demo-000055", "datetime": "2025-05-05T05:44:46+00:00", "lat": 48.853481657, "lon": 2.340254557, "lat_corrected": 48.85349322841058, "lon_corrected": 2.340231168599077, "travel_bearing": 187.779, "distance_to_street_m": 2.144, "valid": true, "skip_reason": "", "source_url": "", "n_detections": 0}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.3407997564991176, 48.85433792703713]}, "properties": {"kind": "address", "address_id": "750029389", "address": "19 Rue de Savoie", "street": "Rue de Savoie", "street_id": "750004358", "number": "19", "side": "left", "is_corner": true, "lat": 48.85433792703713, "lon": 2.3407997564991176, "facade_bearing_deg": 9.0, "photos_in_view": "28", "n_photos_in_view": 1, "plates": "P0012", "readings": "19", "status": "CORRECT", "status_label": "Correct", "confidence": "high", "confidence_score": 0.81, "explanation": "The plate reads 19, the official number at this spot (19 Rue de Savoie). Seen in 2 photos.", "notes": ""}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.3414209272888344, 48.85506574996558]}, "properties": {"kind": "address", "address_id": "750027401", "address": "1 Rue des Grands Augustins", "street": "Rue des Grands Augustins", "street_id": "750004691", "number": "1", "side": "left", "is_corner": true, "lat": 48.85506574996558, "lon": 2.3414209272888344, "facade_bearing_deg": 307.0, "photos_in_view": "6", "n_photos_in_view": 1, "plates": "P0002", "readings": "1", "status": "CORRECT", "status_label": "Correct", "confidence": "high", "confidence_score": 0.81, "explanation": "The plate reads 1, the official number at this spot (1 Rue des Grands Augustins). Seen in 2 photos.", "notes": ""}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.341368240753735, 48.855186279108885]}, "properties": {"kind": "address", "address_id": "750027427", "address": "2 Rue des Grands Augustins", "street": "Rue des Grands Augustins", "street_id": "750004691", "number": "2", "side": "right", "is_corner": true, "lat": 48.855186279108885, "lon": 2.341368240753735, "facade_bearing_deg": 122.0, "photos_in_view": "3;4", "n_photos_in_view": 2, "plates": "P0001", "readings": "2", "status": "CORRECT", "status_label": "Correct", "confidence": "high", "confidence_score": 0.81, "explanation": "The plate reads 2, the official number at this spot (2 Rue des Grands Augustins). Seen in 2 photos.", "notes": ""}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.341235619992247, 48.85490579616788]}, "properties": {"kind": "address", "address_id": "750027402", "address": "3 Rue des Grands Augustins", "street": "Rue des Grands Augustins", "street_id": "750004691", "number": "3", "side": "left", "is_corner": false, "lat": 48.85490579616788, "lon": 2.341235619992247, "facade_bearing_deg": 306.0, "photos_in_view": "11;12", "n_photos_in_view": 2, "plates": "P0004", "readings": "3", "status": "CORRECT", "status_label": "Correct", "confidence": "high", "confidence_score": 0.81, "explanation": "The plate reads 3, the official number at this spot (3 Rue des Grands Augustins). Seen in 2 photos.", "notes": ""}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.3412068189412816, 48.85501815572296]}, "properties": {"kind": "address", "address_id": "750027428", "address": "4 Rue des Grands Augustins", "street": "Rue des Grands Augustins", "street_id": "750004691", "number": "4", "side": "right", "is_corner": false, "lat": 48.85501815572296, "lon": 2.3412068189412816, "facade_bearing_deg": 122.0, "photos_in_view": "9", "n_photos_in_view": 1, "plates": "P0003", "readings": "4", "status": "CORRECT", "status_label": "Correct", "confidence": "low", "confidence_score": 0.324, "explanation": "The plate reads 4, the official number at this spot (4 Rue des Grands Augustins). Seen in 1 photo.", "notes": ""}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.34108884140975, 48.85476317791901]}, "properties": {"kind": "address", "address_id": "750027403", "address": "5 Rue des Grands Augustins", "street": "Rue des Grands Augustins", "street_id": "750004691", "number": "5", "side": "left", "is_corner": false, "lat": 48.85476317791901, "lon": 2.34108884140975, "facade_bearing_deg": 300.0, "photos_in_view": "16", "n_photos_in_view": 1, "plates": "P0006", "readings": "5", "status": "CORRECT", "status_label": "Correct", "confidence": "high", "confidence_score": 0.81, "explanation": "The plate reads 5, the official number at this spot (5 Rue des Grands Augustins). Seen in 2 photos.", "notes": ""}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.3410181711330598, 48.85482174137559]}, "properties": {"kind": "address", "address_id": "750027429", "address": "6 Rue des Grands Augustins", "street": "Rue des Grands Augustins", "street_id": "750004691", "number": "6", "side": "right", "is_corner": true, "lat": 48.85482174137559, "lon": 2.3410181711330598, "facade_bearing_deg": 122.0, "photos_in_view": "15;16", "n_photos_in_view": 2, "plates": "P0005", "readings": "6", "status": "CORRECT", "status_label": "Correct", "confidence": "high", "confidence_score": 0.81, "explanation": "The plate reads 6, the official number at this spot (6 Rue des Grands Augustins). Seen in 2 photos.", "notes": ""}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.3409587586211686, 48.85461735079629]}, "properties": {"kind": "address", "address_id": "750027404", "address": "7 Rue des Grands Augustins", "street": "Rue des Grands Augustins", "street_id": "750004691", "number": "7", "side": "left", "is_corner": false, "lat": 48.85461735079629, "lon": 2.3409587586211686, "facade_bearing_deg": 300.0, "photos_in_view": "21", "n_photos_in_view": 1, "plates": "P0009", "readings": "7", "status": "CORRECT", "status_label": "Correct", "confidence": "low", "confidence_score": 0.324, "explanation": "The plate reads 7, the official number at this spot (7 Rue des Grands Augustins). Seen in 1 photo.", "notes": ""}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.3407583817089384, 48.8545305835438]}, "properties": {"kind": "address", "address_id": "750027424", "address": "8 Rue des Grands Augustins", "street": "Rue des Grands Augustins", "street_id": "750004691", "number": "8", "side": "right", "is_corner": true, "lat": 48.8545305835438, "lon": 2.3407583817089384, "facade_bearing_deg": 120.0, "photos_in_view": "24;25", "n_photos_in_view": 2, "plates": "P0011", "readings": "8", "status": "CORRECT", "status_label": "Correct", "confidence": "low", "confidence_score": 0.324, "explanation": "The plate reads 8, the official number at this spot (8 Rue des Grands Augustins). Seen in 1 photo.", "notes": ""}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.340886230254084, 48.85453621630872]}, "properties": {"kind": "address", "address_id": "750027405", "address": "9 Rue des Grands Augustins", "street": "Rue des Grands Augustins", "street_id": "750004691", "number": "9", "side": "left", "is_corner": false, "lat": 48.85453621630872, "lon": 2.340886230254084, "facade_bearing_deg": 301.0, "photos_in_view": "23;24", "n_photos_in_view": 2, "plates": "", "readings": "", "status": "NOT_FOUND", "status_label": "Plate not found", "confidence": "medium", "confidence_score": null, "explanation": "No plate was found although this address was in view in 2 photos (23, 24). The plate may be missing, hidden or too small to read.", "notes": ""}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.3406601122592567, 48.85442011405739]}, "properties": {"kind": "address", "address_id": "750027425", "address": "10 Rue des Grands Augustins", "street": "Rue des Grands Augustins", "street_id": "750004691", "number": "10", "side": "right", "is_corner": false, "lat": 48.85442011405739, "lon": 2.3406601122592567, "facade_bearing_deg": 120.0, "photos_in_view": "28;29", "n_photos_in_view": 2, "plates": "P0013", "readings": "10", "status": "CORRECT", "status_label": "Correct", "confidence": "high", "confidence_score": 0.81, "explanation": "The plate reads 10, the official number at this spot (10 Rue des Grands Augustins). Seen in 2 photos.", "notes": ""}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.340835883325142, 48.8544803678891]}, "properties": {"kind": "address", "address_id": "750027406", "address": "11 Rue des Grands Augustins", "street": "Rue des Grands Augustins", "street_id": "750004691", "number": "11", "side": "left", "is_corner": true, "lat": 48.8544803678891, "lon": 2.340835883325142, "facade_bearing_deg": 301.0, "photos_in_view": "25;26", "n_photos_in_view": 2, "plates": "P0010", "readings": "11", "status": "CORRECT", "status_label": "Correct", "confidence": "high", "confidence_score": 0.81, "explanation": "The plate reads 11, the official number at this spot (11 Rue des Grands Augustins). Seen in 2 photos.", "notes": ""}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.3406002472017278, 48.8543528632345]}, "properties": {"kind": "address", "address_id": "750027426", "address": "12 Rue des Grands Augustins", "street": "Rue des Grands Augustins", "street_id": "750004691", "number": "12", "side": "right", "is_corner": true, "lat": 48.8543528632345, "lon": 2.3406002472017278, "facade_bearing_deg": 120.0, "photos_in_view": "30;31", "n_photos_in_view": 2, "plates": "P0015", "readings": "12 bis", "status": "SUFFIX_MISMATCH", "status_label": "Suffix mismatch", "confidence": "high", "confidence_score": 0.81, "explanation": "The plate reads 12 bis but the official address at this spot is 12 Rue des Grands Augustins. Only the suffix differs. Seen in 2 photos.", "notes": ""}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.3406940858185297, 48.85432017616892]}, "properties": {"kind": "address", "address_id": "750027407", "address": "13 Rue des Grands Augustins", "street": "Rue des Grands Augustins", "street_id": "750004691", "number": "13", "side": "left", "is_corner": true, "lat": 48.85432017616892, "lon": 2.3406940858185297, "facade_bearing_deg": 300.0, "photos_in_view": "30;31", "n_photos_in_view": 2, "plates": "P0014", "readings": "13", "status": "CORRECT", "status_label": "Correct", "confidence": "high", "confidence_score": 0.81, "explanation": "The plate reads 13, the official number at this spot (13 Rue des Grands Augustins). Seen in 2 photos.", "notes": ""}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.340482047379257, 48.854210554530745]}, "properties": {"kind": "address", "address_id": "750027415", "address": "14 Rue des Grands Augustins", "street": "Rue des Grands Augustins", "street_id": "750004691", "number": "14", "side": "right", "is_corner": true, "lat": 48.854210554530745, "lon": 2.340482047379257, "facade_bearing_deg": 115.0, "photos_in_view": "35", "n_photos_in_view": 1, "plates": "P0018", "readings": "18", "status": "OUT_OF_PLACE", "status_label": "Out of place", "confidence": "high", "confidence_score": 0.81, "explanation": "The plate reads 18, but the official position of 18 Rue des Grands Augustins is 20 m away on the same side. The official address at this spot is 14 Rue des Grands Augustins. Seen in 2 photos.", "notes": ""}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.340654215593652, 48.85427542945488]}, "properties": {"kind": "address", "address_id": "750027408", "address": "15 Rue des Grands Augustins", "street": "Rue des Grands Augustins", "street_id": "750004691", "number": "15", "side": "left", "is_corner": false, "lat": 48.85427542945488, "lon": 2.340654215593652, "facade_bearing_deg": 300.0, "photos_in_view": "32", "n_photos_in_view": 1, "plates": "P0016", "readings": "15", "status": "CORRECT", "status_label": "Correct", "confidence": "low", "confidence_score": 0.324, "explanation": "The plate reads 15, the official number at this spot (15 Rue des Grands Augustins). Seen in 1 photo.", "notes": ""}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.3404330393464954, 48.85412758877613]}, "properties": {"kind": "address", "address_id": "750027416", "address": "16 Rue des Grands Augustins", "street": "Rue des Grands Augustins", "street_id": "750004691", "number": "16", "side": "right", "is_corner": false, "lat": 48.85412758877613, "lon": 2.3404330393464954, "facade_bearing_deg": 109.0, "photos_in_view": "37;38", "n_photos_in_view": 2, "plates": "P0019", "readings": "16", "status": "CORRECT", "status_label": "Correct", "confidence": "high", "confidence_score": 0.81, "explanation": "The plate reads 16, the official number at this spot (16 Rue des Grands Augustins). Seen in 2 photos.", "notes": ""}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.340603097988456, 48.8542180567662]}, "properties": {"kind": "address", "address_id": "750027409", "address": "17 Rue des Grands Augustins", "street": "Rue des Grands Augustins", "street_id": "750004691", "number": "17", "side": "left", "is_corner": false, "lat": 48.8542180567662, "lon": 2.340603097988456, "facade_bearing_deg": 300.0, "photos_in_view": "34", "n_photos_in_view": 1, "plates": "P0017", "readings": "17", "status": "CORRECT", "status_label": "Correct", "confidence": "low", "confidence_score": 0.324, "explanation": "The plate reads 17, the official number at this spot (17 Rue des Grands Augustins). Seen in 1 photo.", "notes": ""}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.34039092687751, 48.85404790767602]}, "properties": {"kind": "address", "address_id": "750027417", "address": "18 Rue des Grands Augustins", "street": "Rue des Grands Augustins", "street_id": "750004691", "number": "18", "side": "right", "is_corner": false, "lat": 48.85404790767602, "lon": 2.34039092687751, "facade_bearing_deg": 109.0, "photos_in_view": "40", "n_photos_in_view": 1, "plates": "P0021", "readings": "18", "status": "CORRECT", "status_label": "Correct", "confidence": "high", "confidence_score": 0.81, "explanation": "The plate reads 18, the official number at this spot (18 Rue des Grands Augustins). Seen in 2 photos.", "notes": ""}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.340533033082855, 48.8540866617005]}, "properties": {"kind": "address", "address_id": "750027410", "address": "19 Rue des Grands Augustins", "street": "Rue des Grands Augustins", "street_id": "750004691", "number": "19", "side": "left", "is_corner": false, "lat": 48.8540866617005, "lon": 2.340533033082855, "facade_bearing_deg": 288.0, "photos_in_view": "38", "n_photos_in_view": 1, "plates": "P0020", "readings": "20", "status": "WRONG_SIDE", "status_label": "Wrong side", "confidence": "low", "confidence_score": 0.324, "explanation": "The plate reads 20, but 20 Rue des Grands Augustins is on the other side of the street (21 m away). The official address at this spot is 19 Rue des Grands Augustins. Seen in 1 photo.", "notes": ""}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.340342119779466, 48.85394801712779]}, "properties": {"kind": "address", "address_id": "750027418", "address": "20 Rue des Grands Augustins", "street": "Rue des Grands Augustins", "street_id": "750004691", "number": "20", "side": "right", "is_corner": false, "lat": 48.85394801712779, "lon": 2.340342119779466, "facade_bearing_deg": 107.0, "photos_in_view": "42;43", "n_photos_in_view": 2, "plates": "P0023", "readings": "20", "status": "CORRECT", "status_label": "Correct", "confidence": "high", "confidence_score": 0.81, "explanation": "The plate reads 20, the official number at this spot (20 Rue des Grands Augustins). Seen in 2 photos.", "notes": ""}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.340481121717467, 48.85398758151128]}, "properties": {"kind": "address", "address_id": "750027411", "address": "21 Rue des Grands Augustins", "street": "Rue des Grands Augustins", "street_id": "750004691", "number": "21", "side": "left", "is_corner": false, "lat": 48.85398758151128, "lon": 2.340481121717467, "facade_bearing_deg": 287.0, "photos_in_view": "40;41", "n_photos_in_view": 2, "plates": "P0022", "readings": "21", "status": "CORRECT", "status_label": "Correct", "confidence": "high", "confidence_score": 0.81, "explanation": "The plate reads 21, the official number at this spot (21 Rue des Grands Augustins). Seen in 2 photos.", "notes": ""}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.340289145278509, 48.853834990984055]}, "properties": {"kind": "address", "address_id": "750027419", "address": "22 Rue des Grands Augustins", "street": "Rue des Grands Augustins", "street_id": "750004691", "number": "22", "side": "right", "is_corner": false, "lat": 48.853834990984055, "lon": 2.340289145278509, "facade_bearing_deg": 107.0, "photos_in_view": "46", "n_photos_in_view": 1, "plates": "P0026", "readings": "22", "status": "CORRECT", "status_label": "Correct", "confidence": "low", "confidence_score": 0.324, "explanation": "The plate reads 22, the official number at this spot (22 Rue des Grands Augustins). Seen in 1 photo.", "notes": ""}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.340440712143591, 48.853901497407264]}, "properties": {"kind": "address", "address_id": "750027412", "address": "23 Rue des Grands Augustins", "street": "Rue des Grands Augustins", "street_id": "750004691", "number": "23", "side": "left", "is_corner": false, "lat": 48.853901497407264, "lon": 2.340440712143591, "facade_bearing_deg": 287.0, "photos_in_view": "43", "n_photos_in_view": 1, "plates": "P0024", "readings": "123", "status": "UNKNOWN_NUMBER", "status_label": "Unknown number", "confidence": "high", "confidence_score": 0.81, "explanation": "The plate reads 123, which is not an official number on Rue des Grands Augustins. The official address at this spot is 23 Rue des Grands Augustins. Seen in 2 photos.", "notes": ""}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.34026579710572, 48.8537705943764]}, "properties": {"kind": "address", "address_id": "750027420", "address": "24 Rue des Grands Augustins", "street": "Rue des Grands Augustins", "street_id": "750004691", "number": "24", "side": "right", "is_corner": false, "lat": 48.8537705943764, "lon": 2.34026579710572, "facade_bearing_deg": 100.0, "photos_in_view": "48", "n_photos_in_view": 1, "plates": "P0027", "readings": "24", "status": "CORRECT", "status_label": "Correct", "confidence": "high", "confidence_score": 0.81, "explanation": "The plate reads 24, the official number at this spot (24 Rue des Grands Augustins). Seen in 2 photos.", "notes": ""}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.3403870809778784, 48.85378434863952]}, "properties": {"kind": "address", "address_id": "750027413", "address": "25 Rue des Grands Augustins", "street": "Rue des Grands Augustins", "street_id": "750004691", "number": "25", "side": "left", "is_corner": false, "lat": 48.85378434863952, "lon": 2.3403870809778784, "facade_bearing_deg": 288.0, "photos_in_view": "47", "n_photos_in_view": 1, "plates": "P0025", "readings": "unreadable", "status": "UNREADABLE", "status_label": "Unreadable", "confidence": "low", "confidence_score": 0.486, "explanation": "A plate was found but its number cannot be read. The official address at this spot is 25 Rue des Grands Augustins. Seen in 2 photos.", "notes": ""}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.340248068135878, 48.85371232636782]}, "properties": {"kind": "address", "address_id": "750027421", "address": "26 Rue des Grands Augustins", "street": "Rue des Grands Augustins", "street_id": "750004691", "number": "26", "side": "right", "is_corner": false, "lat": 48.85371232636782, "lon": 2.340248068135878, "facade_bearing_deg": 103.0, "photos_in_view": "49", "n_photos_in_view": 1, "plates": "P0028", "readings": "26", "status": "CORRECT", "status_label": "Correct", "confidence": "low", "confidence_score": 0.324, "explanation": "The plate reads 26, the official number at this spot (26 Rue des Grands Augustins). Seen in 1 photo.", "notes": ""}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.340297395799398, 48.85359453105853]}, "properties": {"kind": "address", "address_id": "750027414", "address": "27 Rue des Grands Augustins", "street": "Rue des Grands Augustins", "street_id": "750004691", "number": "27", "side": "left", "is_corner": true, "lat": 48.85359453105853, "lon": 2.340297395799398, "facade_bearing_deg": 287.0, "photos_in_view": "52", "n_photos_in_view": 1, "plates": "P0030", "readings": "27", "status": "CORRECT", "status_label": "Correct", "confidence": "low", "confidence_score": 0.324, "explanation": "The plate reads 27, the official number at this spot (27 Rue des Grands Augustins). Seen in 1 photo.", "notes": ""}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.340221899804612, 48.853652168141714]}, "properties": {"kind": "address", "address_id": "750027422", "address": "28 Rue des Grands Augustins", "street": "Rue des Grands Augustins", "street_id": "750004691", "number": "28", "side": "right", "is_corner": false, "lat": 48.853652168141714, "lon": 2.340221899804612, "facade_bearing_deg": 108.0, "photos_in_view": "", "n_photos_in_view": 0, "plates": "P0029", "readings": "28", "status": "CORRECT", "status_label": "Correct", "confidence": "high", "confidence_score": 0.81, "explanation": "The plate reads 28, the official number at this spot (28 Rue des Grands Augustins). Seen in 2 photos.", "notes": ""}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.340172428269065, 48.85355206696957]}, "properties": {"kind": "address", "address_id": "750027423", "address": "30 Rue des Grands Augustins", "street": "Rue des Grands Augustins", "street_id": "750004691", "number": "30", "side": "right", "is_corner": true, "lat": 48.85355206696957, "lon": 2.340172428269065, "facade_bearing_deg": 108.0, "photos_in_view": "54", "n_photos_in_view": 1, "plates": "P0031", "readings": "30", "status": "CORRECT", "status_label": "Correct", "confidence": "high", "confidence_score": 0.81, "explanation": "The plate reads 30, the official number at this spot (30 Rue des Grands Augustins). Seen in 2 photos.", "notes": ""}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.3407398215724067, 48.854697365387885]}, "properties": {"kind": "address", "address_id": "750028582", "address": "1 Rue du Pont de Lodi", "street": "Rue du Pont de Lodi", "street_id": "750004410", "number": "1", "side": "right", "is_corner": true, "lat": 48.854697365387885, "lon": 2.3407398215724067, "facade_bearing_deg": 47.0, "photos_in_view": "20", "n_photos_in_view": 1, "plates": "", "readings": "", "status": "NOT_COVERED", "status_label": "Not enough views", "confidence": "", "confidence_score": null, "explanation": "In view in 1 photo(s) only; at least 2 are needed to report a missing plate.", "notes": ""}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.3413643897060084, 48.85518423959048]}, "properties": {"kind": "plate", "plate_id": "P0001", "view": "right", "side": "right", "reading": "2", "reading_display": "2", "reading_agreement": 1.0, "readings": "2 x1.8", "n_detections": 2, "n_photos": 2, "photos": "3;4", "images": "000003_right.jpg;000004_right.jpg", "lat": 48.85518423959048, "lon": 2.3413643897060084, "located_by": "sight lines crossing", "position_error_m": 0.0, "sight_line_angle_deg": 41.3, "address_id": "750027427", "expected_address": "2 Rue des Grands Augustins", "match_distance_m": 0.36, "match_method": "position", "ambiguous_match": false, "status": "CORRECT", "status_label": "Correct", "raw_status": "CORRECT", "confidence": "high", "confidence_score": 0.81, "explanation": "The plate reads 2, the official number at this spot (2 Rue des Grands Augustins). Seen in 2 photos.", "official_address_of_reading": "", "official_distance_m": null, "official_lat": null, "official_lon": null, "mean_det_conf": 0.9, "mean_ocr_conf": 0.9, "detection_ids": "D00001;D00002"}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.341438074715915, 48.855057169396545]}, "properties": {"kind": "plate", "plate_id": "P0002", "view": "left", "side": "left", "reading": "1", "reading_display": "1", "reading_agreement": 1.0, "readings": "1 x1.8", "n_detections": 2, "n_photos": 2, "photos": "5;6", "images": "000005_left.jpg;000006_left.jpg", "lat": 48.855057169396545, "lon": 2.341438074715915, "located_by": "sight lines crossing", "position_error_m": 0.0, "sight_line_angle_deg": 36.7, "address_id": "750027401", "expected_address": "1 Rue des Grands Augustins", "match_distance_m": 1.58, "match_method": "position", "ambiguous_match": false, "status": "CORRECT", "status_label": "Correct", "raw_status": "CORRECT", "confidence": "high", "confidence_score": 0.81, "explanation": "The plate reads 1, the official number at this spot (1 Rue des Grands Augustins). Seen in 2 photos.", "official_address_of_reading": "", "official_distance_m": null, "official_lat": null, "official_lon": null, "mean_det_conf": 0.9, "mean_ocr_conf": 0.9, "detection_ids": "D00003;D00004"}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.34121788936554, 48.85502755554365]}, "properties": {"kind": "plate", "plate_id": "P0003", "view": "right", "side": "right", "reading": "4", "reading_display": "4", "reading_agreement": 1.0, "readings": "4 x0.9", "n_detections": 1, "n_photos": 1, "photos": "9", "images": "000009_right.jpg", "lat": 48.85502755554365, "lon": 2.34121788936554, "located_by": "single sight line", "position_error_m": null, "sight_line_angle_deg": null, "address_id": "750027428", "expected_address": "4 Rue des Grands Augustins", "match_distance_m": 1.32, "match_method": "sight line", "ambiguous_match": false, "status": "CORRECT", "status_label": "Correct", "raw_status": "CORRECT", "confidence": "low", "confidence_score": 0.324, "explanation": "The plate reads 4, the official number at this spot (4 Rue des Grands Augustins). Seen in 1 photo.", "official_address_of_reading": "", "official_distance_m": null, "official_lat": null, "official_lon": null, "mean_det_conf": 0.9, "mean_ocr_conf": 0.9, "detection_ids": "D00005"}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.3412106971431035, 48.85490334588911]}, "properties": {"kind": "plate", "plate_id": "P0004", "view": "left", "side": "left", "reading": "3", "reading_display": "3", "reading_agreement": 1.0, "readings": "3 x1.8", "n_detections": 2, "n_photos": 2, "photos": "11;12", "images": "000011_left.jpg;000012_left.jpg", "lat": 48.85490334588911, "lon": 2.3412106971431035, "located_by": "sight lines crossing", "position_error_m": 0.0, "sight_line_angle_deg": 53.4, "address_id": "750027402", "expected_address": "3 Rue des Grands Augustins", "match_distance_m": 1.84, "match_method": "position", "ambiguous_match": false, "status": "CORRECT", "status_label": "Correct", "raw_status": "CORRECT", "confidence": "high", "confidence_score": 0.81, "explanation": "The plate reads 3, the official number at this spot (3 Rue des Grands Augustins). Seen in 2 photos.", "official_address_of_reading": "", "official_distance_m": null, "official_lat": null, "official_lon": null, "mean_det_conf": 0.9, "mean_ocr_conf": 0.9, "detection_ids": "D00006;D00007"}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.341027661419271, 48.85482070435053]}, "properties": {"kind": "plate", "plate_id": "P0005", "view": "right", "side": "right", "reading": "6", "reading_display": "6", "reading_agreement": 1.0, "readings": "6 x1.8", "n_detections": 2, "n_photos": 2, "photos": "15;16", "images": "000015_right.jpg;000016_right.jpg", "lat": 48.85482070435053, "lon": 2.341027661419271, "located_by": "sight lines crossing", "position_error_m": 0.0, "sight_line_angle_deg": 52.5, "address_id": "750027429", "expected_address": "6 Rue des Grands Augustins", "match_distance_m": 0.7, "match_method": "position", "ambiguous_match": false, "status": "CORRECT", "status_label": "Correct", "raw_status": "CORRECT", "confidence": "high", "confidence_score": 0.81, "explanation": "The plate reads 6, the official number at this spot (6 Rue des Grands Augustins). Seen in 2 photos.", "official_address_of_reading": "", "official_distance_m": null, "official_lat": null, "official_lon": null, "mean_det_conf": 0.9, "mean_ocr_conf": 0.9, "detection_ids": "D00008;D00010"}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.34108884140975, 48.85475208738552]}, "properties": {"kind": "plate", "plate_id": "P0006", "view": "left", "side": "left", "reading": "5", "reading_display": "5", "reading_agreement": 1.0, "readings": "5 x1.8", "n_detections": 2, "n_photos": 2, "photos": "16;17", "images": "000016_left.jpg;000017_left.jpg", "lat": 48.85475208738552, "lon": 2.34108884140975, "located_by": "sight lines crossing", "position_error_m": 0.0, "sight_line_angle_deg": 52.3, "address_id": "750027403", "expected_address": "5 Rue des Grands Augustins", "match_distance_m": 1.23, "match_method": "position", "ambiguous_match": false, "status": "CORRECT", "status_label": "Correct", "raw_status": "CORRECT", "confidence": "high", "confidence_score": 0.81, "explanation": "The plate reads 5, the official number at this spot (5 Rue des Grands Augustins). Seen in 2 photos.", "official_address_of_reading": "", "official_distance_m": null, "official_lat": null, "official_lon": null, "mean_det_conf": 0.9, "mean_ocr_conf": 0.9, "detection_ids": "D00009;D00011"}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.3409342056860334, 48.854724558574844]}, "properties": {"kind": "plate", "plate_id": "P0007", "view": "right", "side": "right", "reading": "96", "reading_display": "96", "reading_agreement": 1.0, "readings": "96 x1.8", "n_detections": 2, "n_photos": 2, "photos": "18;19", "images": "000018_right.jpg;000019_right.jpg", "lat": 48.854724558574844, "lon": 2.3409342056860334, "located_by": "sight lines crossing", "position_error_m": 0.0, "sight_line_angle_deg": 50.0, "address_id": "", "expected_address": "", "match_distance_m": null, "match_method": "position", "ambiguous_match": false, "status": "NO_ADDRESS_NEARBY", "status_label": "No address here", "raw_status": "NO_ADDRESS_NEARBY", "confidence": "high", "confidence_score": 0.81, "explanation": "The plate reads 96. There is no official address at this spot and this number is not on a nearby street. Seen in 2 photos.", "official_address_of_reading": "", "official_distance_m": null, "official_lat": null, "official_lon": null, "mean_det_conf": 0.9, "mean_ocr_conf": 0.9, "detection_ids": "D00012;D00014"}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.3408152958720447, 48.85469604712986]}, "properties": {"kind": "plate", "plate_id": "P0008", "view": "right", "side": "right", "reading": "1", "reading_display": "1", "reading_agreement": 1.0, "readings": "1 x1.8", "n_detections": 2, "n_photos": 2, "photos": "19;20", "images": "000019_right.jpg;000020_right.jpg", "lat": 48.85469604712986, "lon": 2.3408152958720447, "located_by": "sight lines crossing", "position_error_m": 0.0, "sight_line_angle_deg": 15.8, "address_id": "", "expected_address": "", "match_distance_m": null, "match_method": "position", "ambiguous_match": false, "status": "UNCERTAIN", "status_label": "Uncertain", "raw_status": "UNCERTAIN", "confidence": "high", "confidence_score": 0.81, "explanation": "The plate reads 1; the official position of 1 Rue du Pont de Lodi is only 5.5 m away. This is probably a position error, not a wrong plate. Seen in 2 photos.", "official_address_of_reading": "1 Rue du Pont de Lodi", "official_distance_m": 5.5, "official_lat": 48.854697365387885, "official_lon": 2.3407398215724067, "mean_det_conf": 0.9, "mean_ocr_conf": 0.9, "detection_ids": "D00013;D00015"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[2.3408152958720447, 48.85469604712986], [2.3407398215724067, 48.854697365387885]]}, "properties": {"kind": "link", "plate_id": "P0008", "status": "UNCERTAIN"}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.3409576002457158, 48.85461588450846]}, "properties": {"kind": "plate", "plate_id": "P0009", "view": "left", "side": "left", "reading": "7", "reading_display": "7", "reading_agreement": 1.0, "readings": "7 x0.9", "n_detections": 1, "n_photos": 1, "photos": "21", "images": "000021_left.jpg", "lat": 48.85461588450846, "lon": 2.3409576002457158, "located_by": "single sight line", "position_error_m": null, "sight_line_angle_deg": null, "address_id": "750027404", "expected_address": "7 Rue des Grands Augustins", "match_distance_m": 0.18, "match_method": "sight line", "ambiguous_match": false, "status": "CORRECT", "status_label": "Correct", "raw_status": "CORRECT", "confidence": "low", "confidence_score": 0.324, "explanation": "The plate reads 7, the official number at this spot (7 Rue des Grands Augustins). Seen in 1 photo.", "official_address_of_reading": "", "official_distance_m": null, "official_lat": null, "official_lon": null, "mean_det_conf": 0.9, "mean_ocr_conf": 0.9, "detection_ids": "D00016"}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.340830864806104, 48.85449338864161]}, "properties": {"kind": "plate", "plate_id": "P0010", "view": "left", "side": "left", "reading": "11", "reading_display": "11", "reading_agreement": 1.0, "readings": "11 x1.8", "n_detections": 2, "n_photos": 2, "photos": "25;26", "images": "000025_left.jpg;000026_left.jpg", "lat": 48.85449338864161, "lon": 2.340830864806104, "located_by": "sight lines crossing", "position_error_m": 0.0, "sight_line_angle_deg": 47.4, "address_id": "750027406", "expected_address": "11 Rue des Grands Augustins", "match_distance_m": 1.49, "match_method": "position", "ambiguous_match": false, "status": "CORRECT", "status_label": "Correct", "raw_status": "CORRECT", "confidence": "high", "confidence_score": 0.81, "explanation": "The plate reads 11, the official number at this spot (11 Rue des Grands Augustins). Seen in 2 photos.", "official_address_of_reading": "", "official_distance_m": null, "official_lat": null, "official_lon": null, "mean_det_conf": 0.9, "mean_ocr_conf": 0.9, "detection_ids": "D00017;D00019"}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.340770330620634, 48.854537097864664]}, "properties": {"kind": "plate", "plate_id": "P0011", "view": "right", "side": "right", "reading": "8", "reading_display": "8", "reading_agreement": 1.0, "readings": "8 x0.9", "n_detections": 1, "n_photos": 1, "photos": "25", "images": "000025_right.jpg", "lat": 48.854537097864664, "lon": 2.340770330620634, "located_by": "single sight line", "position_error_m": null, "sight_line_angle_deg": null, "address_id": "750027424", "expected_address": "8 Rue des Grands Augustins", "match_distance_m": 1.14, "match_method": "sight line", "ambiguous_match": false, "status": "CORRECT", "status_label": "Correct", "raw_status": "CORRECT", "confidence": "low", "confidence_score": 0.324, "explanation": "The plate reads 8, the official number at this spot (8 Rue des Grands Augustins). Seen in 1 photo.", "official_address_of_reading": "", "official_distance_m": null, "official_lat": null, "official_lon": null, "mean_det_conf": 0.9, "mean_ocr_conf": 0.9, "detection_ids": "D00018"}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.340804916419813, 48.854343020065095]}, "properties": {"kind": "plate", "plate_id": "P0012", "view": "left", "side": "left", "reading": "19", "reading_display": "19", "reading_agreement": 1.0, "readings": "19 x1.8", "n_detections": 2, "n_photos": 2, "photos": "28;29", "images": "000028_left.jpg;000029_left.jpg", "lat": 48.854343020065095, "lon": 2.340804916419813, "located_by": "sight lines crossing", "position_error_m": 0.0, "sight_line_angle_deg": 21.9, "address_id": "750029389", "expected_address": "19 Rue de Savoie", "match_distance_m": 0.68, "match_method": "position", "ambiguous_match": false, "status": "CORRECT", "status_label": "Correct", "raw_status": "CORRECT", "confidence": "high", "confidence_score": 0.81, "explanation": "The plate reads 19, the official number at this spot (19 Rue de Savoie). Seen in 2 photos.", "official_address_of_reading": "", "official_distance_m": null, "official_lat": null, "official_lon": null, "mean_det_conf": 0.9, "mean_ocr_conf": 0.9, "detection_ids": "D00020;D00022"}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.3406580934670465, 48.85442206820997]}, "properties": {"kind": "plate", "plate_id": "P0013", "view": "right", "side": "right", "reading": "10", "reading_display": "10", "reading_agreement": 1.0, "readings": "10 x1.8", "n_detections": 2, "n_photos": 2, "photos": "28;29", "images": "000028_right.jpg;000029_right.jpg", "lat": 48.85442206820997, "lon": 2.3406580934670465, "located_by": "sight lines crossing", "position_error_m": 0.0, "sight_line_angle_deg": 56.6, "address_id": "750027425", "expected_address": "10 Rue des Grands Augustins", "match_distance_m": 0.26, "match_method": "position", "ambiguous_match": false, "status": "CORRECT", "status_label": "Correct", "raw_status": "CORRECT", "confidence": "high", "confidence_score": 0.81, "explanation": "The plate reads 10, the official number at this spot (10 Rue des Grands Augustins). Seen in 2 photos.", "official_address_of_reading": "", "official_distance_m": null, "official_lat": null, "official_lon": null, "mean_det_conf": 0.9, "mean_ocr_conf": 0.9, "detection_ids": "D00021;D00023"}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.3407014637100954, 48.854317012302666]}, "properties": {"kind": "plate", "plate_id": "P0014", "view": "left", "side": "left", "reading": "13", "reading_display": "13", "reading_agreement": 1.0, "readings": "13 x1.8", "n_detections": 2, "n_photos": 2, "photos": "30;31", "images": "000030_left.jpg;000031_left.jpg", "lat": 48.854317012302666, "lon": 2.3407014637100954, "located_by": "sight lines crossing", "position_error_m": 0.0, "sight_line_angle_deg": 56.7, "address_id": "750027407", "expected_address": "13 Rue des Grands Augustins", "match_distance_m": 0.64, "match_method": "position", "ambiguous_match": false, "status": "CORRECT", "status_label": "Correct", "raw_status": "CORRECT", "confidence": "high", "confidence_score": 0.81, "explanation": "The plate reads 13, the official number at this spot (13 Rue des Grands Augustins). Seen in 2 photos.", "official_address_of_reading": "", "official_distance_m": null, "official_lat": null, "official_lon": null, "mean_det_conf": 0.9, "mean_ocr_conf": 0.9, "detection_ids": "D00024;D00026"}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.340605560404661, 48.854357512055635]}, "properties": {"kind": "plate", "plate_id": "P0015", "view": "right", "side": "right", "reading": "12b", "reading_display": "12 bis", "reading_agreement": 1.0, "readings": "12 bis x1.8", "n_detections": 2, "n_photos": 2, "photos": "30;31", "images": "000030_right.jpg;000031_right.jpg", "lat": 48.854357512055635, "lon": 2.340605560404661, "located_by": "sight lines crossing", "position_error_m": 0.0, "sight_line_angle_deg": 52.4, "address_id": "750027426", "expected_address": "12 Rue des Grands Augustins", "match_distance_m": 0.65, "match_method": "position", "ambiguous_match": false, "status": "SUFFIX_MISMATCH", "status_label": "Suffix mismatch", "raw_status": "SUFFIX_MISMATCH", "confidence": "high", "confidence_score": 0.81, "explanation": "The plate reads 12 bis but the official address at this spot is 12 Rue des Grands Augustins. Only the suffix differs. Seen in 2 photos.", "official_address_of_reading": "", "official_distance_m": null, "official_lat": null, "official_lon": null, "mean_det_conf": 0.9, "mean_ocr_conf": 0.9, "detection_ids": "D00025;D00027"}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.340655774577596, 48.854278776381186]}, "properties": {"kind": "plate", "plate_id": "P0016", "view": "left", "side": "left", "reading": "15", "reading_display": "15", "reading_agreement": 1.0, "readings": "15 x0.9", "n_detections": 1, "n_photos": 1, "photos": "32", "images": "000032_left.jpg", "lat": 48.854278776381186, "lon": 2.340655774577596, "located_by": "single sight line", "position_error_m": null, "sight_line_angle_deg": null, "address_id": "750027408", "expected_address": "15 Rue des Grands Augustins", "match_distance_m": 0.39, "match_method": "sight line", "ambiguous_match": false, "status": "CORRECT", "status_label": "Correct", "raw_status": "CORRECT", "confidence": "low", "confidence_score": 0.324, "explanation": "The plate reads 15, the official number at this spot (15 Rue des Grands Augustins). Seen in 1 photo.", "official_address_of_reading": "", "official_distance_m": null, "official_lat": null, "official_lon": null, "mean_det_conf": 0.9, "mean_ocr_conf": 0.9, "detection_ids": "D00028"}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.340602975171702, 48.85422358420578]}, "properties": {"kind": "plate", "plate_id": "P0017", "view": "left", "side": "left", "reading": "17", "reading_display": "17", "reading_agreement": 1.0, "readings": "17 x0.9", "n_detections": 1, "n_photos": 1, "photos": "34", "images": "000034_left.jpg", "lat": 48.85422358420578, "lon": 2.340602975171702, "located_by": "single sight line", "position_error_m": null, "sight_line_angle_deg": null, "address_id": "750027409", "expected_address": "17 Rue des Grands Augustins", "match_distance_m": 0.61, "match_method": "sight line", "ambiguous_match": false, "status": "CORRECT", "status_label": "Correct", "raw_status": "CORRECT", "confidence": "low", "confidence_score": 0.324, "explanation": "The plate reads 17, the official number at this spot (17 Rue des Grands Augustins). Seen in 1 photo.", "official_address_of_reading": "", "official_distance_m": null, "official_lat": null, "official_lon": null, "mean_det_conf": 0.9, "mean_ocr_conf": 0.9, "detection_ids": "D00029"}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.340505295147765, 48.854214400131795]}, "properties": {"kind": "plate", "plate_id": "P0018", "view": "right", "side": "right", "reading": "18", "reading_display": "18", "reading_agreement": 1.0, "readings": "18 x1.8", "n_detections": 2, "n_photos": 2, "photos": "34;35", "images": "000034_right.jpg;000035_right.jpg", "lat": 48.854214400131795, "lon": 2.340505295147765, "located_by": "sight lines crossing", "position_error_m": 0.0, "sight_line_angle_deg": 41.4, "address_id": "750027415", "expected_address": "14 Rue des Grands Augustins", "match_distance_m": 1.75, "match_method": "position", "ambiguous_match": false, "status": "OUT_OF_PLACE", "status_label": "Out of place", "raw_status": "OUT_OF_PLACE", "confidence": "high", "confidence_score": 0.81, "explanation": "The plate reads 18, but the official position of 18 Rue des Grands Augustins is 20 m away on the same side. The official address at this spot is 14 Rue des Grands Augustins. Seen in 2 photos.", "official_address_of_reading": "18 Rue des Grands Augustins", "official_distance_m": 20.3, "official_lat": 48.85404790767602, "official_lon": 2.34039092687751, "mean_det_conf": 0.9, "mean_ocr_conf": 0.9, "detection_ids": "D00030;D00031"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[2.340505295147765, 48.854214400131795], [2.34039092687751, 48.85404790767602]]}, "properties": {"kind": "link", "plate_id": "P0018", "status": "OUT_OF_PLACE"}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.3404434198225377, 48.854115831668864]}, "properties": {"kind": "plate", "plate_id": "P0019", "view": "right", "side": "right", "reading": "16", "reading_display": "16", "reading_agreement": 1.0, "readings": "16 x1.8", "n_detections": 2, "n_photos": 2, "photos": "37;38", "images": "000037_right.jpg;000038_right.jpg", "lat": 48.854115831668864, "lon": 2.3404434198225377, "located_by": "sight lines crossing", "position_error_m": 0.0, "sight_line_angle_deg": 46.8, "address_id": "750027416", "expected_address": "16 Rue des Grands Augustins", "match_distance_m": 1.51, "match_method": "position", "ambiguous_match": false, "status": "CORRECT", "status_label": "Correct", "raw_status": "CORRECT", "confidence": "high", "confidence_score": 0.81, "explanation": "The plate reads 16, the official number at this spot (16 Rue des Grands Augustins). Seen in 2 photos.", "official_address_of_reading": "", "official_distance_m": null, "official_lat": null, "official_lon": null, "mean_det_conf": 0.9, "mean_ocr_conf": 0.9, "detection_ids": "D00032;D00034"}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.340532893473726, 48.85408605477867]}, "properties": {"kind": "plate", "plate_id": "P0020", "view": "left", "side": "left", "reading": "20", "reading_display": "20", "reading_agreement": 1.0, "readings": "20 x0.9", "n_detections": 1, "n_photos": 1, "photos": "38", "images": "000038_left.jpg", "lat": 48.85408605477867, "lon": 2.340532893473726, "located_by": "single sight line", "position_error_m": null, "sight_line_angle_deg": null, "address_id": "750027410", "expected_address": "19 Rue des Grands Augustins", "match_distance_m": 0.07, "match_method": "sight line", "ambiguous_match": false, "status": "WRONG_SIDE", "status_label": "Wrong side", "raw_status": "WRONG_SIDE", "confidence": "low", "confidence_score": 0.324, "explanation": "The plate reads 20, but 20 Rue des Grands Augustins is on the other side of the street (21 m away). The official address at this spot is 19 Rue des Grands Augustins. Seen in 1 photo.", "official_address_of_reading": "20 Rue des Grands Augustins", "official_distance_m": 20.7, "official_lat": 48.85394801712779, "official_lon": 2.340342119779466, "mean_det_conf": 0.9, "mean_ocr_conf": 0.9, "detection_ids": "D00033"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[2.340532893473726, 48.85408605477867], [2.340342119779466, 48.85394801712779]]}, "properties": {"kind": "link", "plate_id": "P0020", "status": "WRONG_SIDE"}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.3403801138840383, 48.85405229323502]}, "properties": {"kind": "plate", "plate_id": "P0021", "view": "right", "side": "right", "reading": "18", "reading_display": "18", "reading_agreement": 1.0, "readings": "18 x1.8", "n_detections": 2, "n_photos": 2, "photos": "39;40", "images": "000039_right.jpg;000040_right.jpg", "lat": 48.85405229323502, "lon": 2.3403801138840383, "located_by": "sight lines crossing", "position_error_m": 0.0, "sight_line_angle_deg": 47.8, "address_id": "750027417", "expected_address": "18 Rue des Grands Augustins", "match_distance_m": 0.93, "match_method": "position", "ambiguous_match": false, "status": "CORRECT", "status_label": "Correct", "raw_status": "CORRECT", "confidence": "high", "confidence_score": 0.81, "explanation": "The plate reads 18, the official number at this spot (18 Rue des Grands Augustins). Seen in 2 photos.", "official_address_of_reading": "", "official_distance_m": null, "official_lat": null, "official_lon": null, "mean_det_conf": 0.9, "mean_ocr_conf": 0.9, "detection_ids": "D00035;D00037"}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.3404678888603963, 48.8539937305114]}, "properties": {"kind": "plate", "plate_id": "P0022", "view": "left", "side": "left", "reading": "21", "reading_display": "21", "reading_agreement": 1.0, "readings": "21 x1.8", "n_detections": 2, "n_photos": 2, "photos": "40;41", "images": "000040_left.jpg;000041_left.jpg", "lat": 48.8539937305114, "lon": 2.3404678888603963, "located_by": "sight lines crossing", "position_error_m": 0.0, "sight_line_angle_deg": 45.5, "address_id": "750027411", "expected_address": "21 Rue des Grands Augustins", "match_distance_m": 1.19, "match_method": "position", "ambiguous_match": false, "status": "CORRECT", "status_label": "Correct", "raw_status": "CORRECT", "confidence": "high", "confidence_score": 0.81, "explanation": "The plate reads 21, the official number at this spot (21 Rue des Grands Augustins). Seen in 2 photos.", "official_address_of_reading": "", "official_distance_m": null, "official_lat": null, "official_lon": null, "mean_det_conf": 0.9, "mean_ocr_conf": 0.9, "detection_ids": "D00036;D00038"}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.340347364829136, 48.85394801712779]}, "properties": {"kind": "plate", "plate_id": "P0023", "view": "right", "side": "right", "reading": "20", "reading_display": "20", "reading_agreement": 1.0, "readings": "20 x1.8", "n_detections": 2, "n_photos": 2, "photos": "42;43", "images": "000042_right.jpg;000043_right.jpg", "lat": 48.85394801712779, "lon": 2.340347364829136, "located_by": "sight lines crossing", "position_error_m": 0.0, "sight_line_angle_deg": 57.3, "address_id": "750027418", "expected_address": "20 Rue des Grands Augustins", "match_distance_m": 0.38, "match_method": "position", "ambiguous_match": false, "status": "CORRECT", "status_label": "Correct", "raw_status": "CORRECT", "confidence": "high", "confidence_score": 0.81, "explanation": "The plate reads 20, the official number at this spot (20 Rue des Grands Augustins). Seen in 2 photos.", "official_address_of_reading": "", "official_distance_m": null, "official_lat": null, "official_lon": null, "mean_det_conf": 0.9, "mean_ocr_conf": 0.9, "detection_ids": "D00039;D00041"}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.3404542431189204, 48.853897468089755]}, "properties": {"kind": "plate", "plate_id": "P0024", "view": "left", "side": "left", "reading": "123", "reading_display": "123", "reading_agreement": 1.0, "readings": "123 x1.8", "n_detections": 2, "n_photos": 2, "photos": "43;44", "images": "000043_left.jpg;000044_left.jpg", "lat": 48.853897468089755, "lon": 2.3404542431189204, "located_by": "sight lines crossing", "position_error_m": 0.0, "sight_line_angle_deg": 43.8, "address_id": "750027412", "expected_address": "23 Rue des Grands Augustins", "match_distance_m": 1.09, "match_method": "position", "ambiguous_match": false, "status": "UNKNOWN_NUMBER", "status_label": "Unknown number", "raw_status": "UNKNOWN_NUMBER", "confidence": "high", "confidence_score": 0.81, "explanation": "The plate reads 123, which is not an official number on Rue des Grands Augustins. The official address at this spot is 23 Rue des Grands Augustins. Seen in 2 photos.", "official_address_of_reading": "", "official_distance_m": null, "official_lat": null, "official_lon": null, "mean_det_conf": 0.9, "mean_ocr_conf": 0.9, "detection_ids": "D00040;D00042"}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.3403961931591915, 48.85378883320664]}, "properties": {"kind": "plate", "plate_id": "P0025", "view": "left", "side": "left", "reading": "", "reading_display": "unreadable", "reading_agreement": null, "readings": "", "n_detections": 2, "n_photos": 2, "photos": "46;47", "images": "000046_left.jpg;000047_left.jpg", "lat": 48.85378883320664, "lon": 2.3403961931591915, "located_by": "sight lines crossing", "position_error_m": 0.0, "sight_line_angle_deg": 46.6, "address_id": "750027413", "expected_address": "25 Rue des Grands Augustins", "match_distance_m": 0.83, "match_method": "position", "ambiguous_match": false, "status": "UNREADABLE", "status_label": "Unreadable", "raw_status": "UNREADABLE", "confidence": "low", "confidence_score": 0.486, "explanation": "A plate was found but its number cannot be read. The official address at this spot is 25 Rue des Grands Augustins. Seen in 2 photos.", "official_address_of_reading": "", "official_distance_m": null, "official_lat": null, "official_lon": null, "mean_det_conf": 0.9, "mean_ocr_conf": 0.9, "detection_ids": "D00043;D00045"}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.340292081546315, 48.853838855325755]}, "properties": {"kind": "plate", "plate_id": "P0026", "view": "right", "side": "right", "reading": "22", "reading_display": "22", "reading_agreement": 1.0, "readings": "22 x0.9", "n_detections": 1, "n_photos": 1, "photos": "46", "images": "000046_right.jpg", "lat": 48.853838855325755, "lon": 2.340292081546315, "located_by": "single sight line", "position_error_m": null, "sight_line_angle_deg": null, "address_id": "750027419", "expected_address": "22 Rue des Grands Augustins", "match_distance_m": 0.48, "match_method": "sight line", "ambiguous_match": false, "status": "CORRECT", "status_label": "Correct", "raw_status": "CORRECT", "confidence": "low", "confidence_score": 0.324, "explanation": "The plate reads 22, the official number at this spot (22 Rue des Grands Augustins). Seen in 1 photo.", "official_address_of_reading": "", "official_distance_m": null, "official_lat": null, "official_lon": null, "mean_det_conf": 0.9, "mean_ocr_conf": 0.9, "detection_ids": "D00044"}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.3402672540230496, 48.853772682400525]}, "properties": {"kind": "plate", "plate_id": "P0027", "view": "right", "side": "right", "reading": "24", "reading_display": "24", "reading_agreement": 1.0, "readings": "24 x1.8", "n_detections": 2, "n_photos": 2, "photos": "47;48", "images": "000047_right.jpg;000048_right.jpg", "lat": 48.853772682400525, "lon": 2.3402672540230496, "located_by": "sight lines crossing", "position_error_m": 0.0, "sight_line_angle_deg": 61.9, "address_id": "750027420", "expected_address": "24 Rue des Grands Augustins", "match_distance_m": 0.26, "match_method": "position", "ambiguous_match": false, "status": "CORRECT", "status_label": "Correct", "raw_status": "CORRECT", "confidence": "high", "confidence_score": 0.81, "explanation": "The plate reads 24, the official number at this spot (24 Rue des Grands Augustins). Seen in 2 photos.", "official_address_of_reading": "", "official_distance_m": null, "official_lat": null, "official_lon": null, "mean_det_conf": 0.9, "mean_ocr_conf": 0.9, "detection_ids": "D00046;D00047"}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.340248989530312, 48.853717739194536]}, "properties": {"kind": "plate", "plate_id": "P0028", "view": "right", "side": "right", "reading": "26", "reading_display": "26", "reading_agreement": 1.0, "readings": "26 x0.9", "n_detections": 1, "n_photos": 1, "photos": "49", "images": "000049_right.jpg", "lat": 48.853717739194536, "lon": 2.340248989530312, "located_by": "single sight line", "position_error_m": null, "sight_line_angle_deg": null, "address_id": "750027421", "expected_address": "26 Rue des Grands Augustins", "match_distance_m": 0.61, "match_method": "sight line", "ambiguous_match": false, "status": "CORRECT", "status_label": "Correct", "raw_status": "CORRECT", "confidence": "low", "confidence_score": 0.324, "explanation": "The plate reads 26, the official number at this spot (26 Rue des Grands Augustins). Seen in 1 photo.", "official_address_of_reading": "", "official_distance_m": null, "official_lat": null, "official_lon": null, "mean_det_conf": 0.9, "mean_ocr_conf": 0.9, "detection_ids": "D00048"}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.3401952353028697, 48.8536543840839]}, "properties": {"kind": "plate", "plate_id": "P0029", "view": "right", "side": "right", "reading": "28", "reading_display": "28", "reading_agreement": 1.0, "readings": "28 x1.8", "n_detections": 2, "n_photos": 2, "photos": "50;51", "images": "000050_right.jpg;000051_right.jpg", "lat": 48.8536543840839, "lon": 2.3401952353028697, "located_by": "sight lines crossing", "position_error_m": 0.0, "sight_line_angle_deg": 59.5, "address_id": "750027422", "expected_address": "28 Rue des Grands Augustins", "match_distance_m": 1.97, "match_method": "position", "ambiguous_match": false, "status": "CORRECT", "status_label": "Correct", "raw_status": "CORRECT", "confidence": "high", "confidence_score": 0.81, "explanation": "The plate reads 28, the official number at this spot (28 Rue des Grands Augustins). Seen in 2 photos.", "official_address_of_reading": "", "official_distance_m": null, "official_lat": null, "official_lon": null, "mean_det_conf": 0.9, "mean_ocr_conf": 0.9, "detection_ids": "D00049;D00050"}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.3402973071455877, 48.85359790183449]}, "properties": {"kind": "plate", "plate_id": "P0030", "view": "left", "side": "left", "reading": "27", "reading_display": "27", "reading_agreement": 1.0, "readings": "27 x0.9", "n_detections": 1, "n_photos": 1, "photos": "52", "images": "000052_left.jpg", "lat": 48.85359790183449, "lon": 2.3402973071455877, "located_by": "single sight line", "position_error_m": null, "sight_line_angle_deg": null, "address_id": "750027414", "expected_address": "27 Rue des Grands Augustins", "match_distance_m": 0.37, "match_method": "sight line", "ambiguous_match": false, "status": "CORRECT", "status_label": "Correct", "raw_status": "CORRECT", "confidence": "low", "confidence_score": 0.324, "explanation": "The plate reads 27, the official number at this spot (27 Rue des Grands Augustins). Seen in 1 photo.", "official_address_of_reading": "", "official_distance_m": null, "official_lat": null, "official_lon": null, "mean_det_conf": 0.9, "mean_ocr_conf": 0.9, "detection_ids": "D00051"}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.3401445329543797, 48.85356464959443]}, "properties": {"kind": "plate", "plate_id": "P0031", "view": "right", "side": "right", "reading": "30", "reading_display": "30", "reading_agreement": 1.0, "readings": "30 x1.8", "n_detections": 2, "n_photos": 2, "photos": "53;54", "images": "000053_right.jpg;000054_right.jpg", "lat": 48.85356464959443, "lon": 2.3401445329543797, "located_by": "sight lines crossing", "position_error_m": 0.0, "sight_line_angle_deg": 45.7, "address_id": "750027423", "expected_address": "30 Rue des Grands Augustins", "match_distance_m": 2.47, "match_method": "position", "ambiguous_match": false, "status": "CORRECT", "status_label": "Correct", "raw_status": "CORRECT", "confidence": "high", "confidence_score": 0.81, "explanation": "The plate reads 30, the official number at this spot (30 Rue des Grands Augustins). Seen in 2 photos.", "official_address_of_reading": "", "official_distance_m": null, "official_lat": null, "official_lon": null, "mean_det_conf": 0.9, "mean_ocr_conf": 0.9, "detection_ids": "D00052;D00053"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[2.341446459599077, 48.85517614841057], [2.3413643897060084, 48.85518423959048]]}, "properties": {"kind": "ray", "plate_id": "P0001", "det_id": "D00001", "sequence_number": 3, "view": "right"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[2.341414095599077, 48.85514555741057], [2.3413643897060084, 48.85518423959048]]}, "properties": {"kind": "ray", "plate_id": "P0001", "det_id": "D00002", "sequence_number": 4, "view": "right"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[2.3413874225990767, 48.855128098410574], [2.341438074715915, 48.855057169396545]]}, "properties": {"kind": "ray", "plate_id": "P0002", "det_id": "D00003", "sequence_number": 5, "view": "left"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[2.341352005599077, 48.85508747541058], [2.341438074715915, 48.855057169396545]]}, "properties": {"kind": "ray", "plate_id": "P0002", "det_id": "D00004", "sequence_number": 6, "view": "left"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[2.341263359599077, 48.85500437141057], [2.34121788936554, 48.85502755554365]]}, "properties": {"kind": "ray", "plate_id": "P0003", "det_id": "D00005", "sequence_number": 9, "view": "right"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[2.341186745599077, 48.85493340341058], [2.3412106971431035, 48.85490334588911]]}, "properties": {"kind": "ray", "plate_id": "P0004", "det_id": "D00006", "sequence_number": 11, "view": "left"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[2.341156767599077, 48.85490891041057], [2.3412106971431035, 48.85490334588911]]}, "properties": {"kind": "ray", "plate_id": "P0004", "det_id": "D00007", "sequence_number": 12, "view": "left"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[2.341060709599077, 48.85481643241057], [2.341027661419271, 48.85482070435053]]}, "properties": {"kind": "ray", "plate_id": "P0005", "det_id": "D00008", "sequence_number": 15, "view": "right"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[2.341051129599077, 48.854789553410576], [2.34108884140975, 48.85475208738552]]}, "properties": {"kind": "ray", "plate_id": "P0006", "det_id": "D00009", "sequence_number": 16, "view": "left"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[2.341051129599077, 48.854789553410576], [2.341027661419271, 48.85482070435053]]}, "properties": {"kind": "ray", "plate_id": "P0005", "det_id": "D00010", "sequence_number": 16, "view": "right"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[2.341009364599077, 48.85475589841057], [2.34108884140975, 48.85475208738552]]}, "properties": {"kind": "ray", "plate_id": "P0006", "det_id": "D00011", "sequence_number": 17, "view": "left"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[2.340984498599077, 48.85472357241058], [2.3409342056860334, 48.854724558574844]]}, "properties": {"kind": "ray", "plate_id": "P0007", "det_id": "D00012", "sequence_number": 18, "view": "right"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[2.3409720775990768, 48.85469295941058], [2.3408152958720447, 48.85469604712986]]}, "properties": {"kind": "ray", "plate_id": "P0008", "det_id": "D00013", "sequence_number": 19, "view": "right"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[2.3409720775990768, 48.85469295941058], [2.3409342056860334, 48.854724558574844]]}, "properties": {"kind": "ray", "plate_id": "P0007", "det_id": "D00014", "sequence_number": 19, "view": "right"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[2.340934224599077, 48.85467138241057], [2.3408152958720447, 48.85469604712986]]}, "properties": {"kind": "ray", "plate_id": "P0008", "det_id": "D00015", "sequence_number": 20, "view": "right"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[2.3409011005990767, 48.85463520841058], [2.3409576002457158, 48.85461588450846]]}, "properties": {"kind": "ray", "plate_id": "P0009", "det_id": "D00016", "sequence_number": 21, "view": "left"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[2.340801669599077, 48.85451221141057], [2.340830864806104, 48.85449338864161]]}, "properties": {"kind": "ray", "plate_id": "P0010", "det_id": "D00017", "sequence_number": 25, "view": "left"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[2.340801669599077, 48.85451221141057], [2.340770330620634, 48.854537097864664]]}, "properties": {"kind": "ray", "plate_id": "P0011", "det_id": "D00018", "sequence_number": 25, "view": "right"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[2.3407624265990767, 48.85449100941057], [2.340830864806104, 48.85449338864161]]}, "properties": {"kind": "ray", "plate_id": "P0010", "det_id": "D00019", "sequence_number": 26, "view": "left"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[2.340715611599077, 48.854420230410575], [2.340804916419813, 48.854343020065095]]}, "properties": {"kind": "ray", "plate_id": "P0012", "det_id": "D00020", "sequence_number": 28, "view": "left"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[2.340715611599077, 48.854420230410575], [2.3406580934670465, 48.85442206820997]]}, "properties": {"kind": "ray", "plate_id": "P0013", "det_id": "D00021", "sequence_number": 28, "view": "right"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[2.340687737599077, 48.85438904741058], [2.340804916419813, 48.854343020065095]]}, "properties": {"kind": "ray", "plate_id": "P0012", "det_id": "D00022", "sequence_number": 29, "view": "left"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[2.340687737599077, 48.85438904741058], [2.3406580934670465, 48.85442206820997]]}, "properties": {"kind": "ray", "plate_id": "P0013", "det_id": "D00023", "sequence_number": 29, "view": "right"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[2.340663468599077, 48.854357059410574], [2.3407014637100954, 48.854317012302666]]}, "properties": {"kind": "ray", "plate_id": "P0014", "det_id": "D00024", "sequence_number": 30, "view": "left"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[2.340663468599077, 48.854357059410574], [2.340605560404661, 48.854357512055635]]}, "properties": {"kind": "ray", "plate_id": "P0015", "det_id": "D00025", "sequence_number": 30, "view": "right"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[2.340651000599077, 48.85431775741058], [2.3407014637100954, 48.854317012302666]]}, "properties": {"kind": "ray", "plate_id": "P0014", "det_id": "D00026", "sequence_number": 31, "view": "left"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[2.340651000599077, 48.85431775741058], [2.340605560404661, 48.854357512055635]]}, "properties": {"kind": "ray", "plate_id": "P0015", "det_id": "D00027", "sequence_number": 31, "view": "right"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[2.340616539599077, 48.854286688410575], [2.340655774577596, 48.854278776381186]]}, "properties": {"kind": "ray", "plate_id": "P0016", "det_id": "D00028", "sequence_number": 32, "view": "left"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[2.3405629735990767, 48.854223199410576], [2.340602975171702, 48.85422358420578]]}, "properties": {"kind": "ray", "plate_id": "P0017", "det_id": "D00029", "sequence_number": 34, "view": "left"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[2.3405629735990767, 48.854223199410576], [2.340505295147765, 48.854214400131795]]}, "properties": {"kind": "ray", "plate_id": "P0018", "det_id": "D00030", "sequence_number": 34, "view": "right"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[2.340552311599077, 48.854197710410574], [2.340505295147765, 48.854214400131795]]}, "properties": {"kind": "ray", "plate_id": "P0018", "det_id": "D00031", "sequence_number": 35, "view": "right"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[2.340506356599077, 48.85411477141057], [2.3404434198225377, 48.854115831668864]]}, "properties": {"kind": "ray", "plate_id": "P0019", "det_id": "D00032", "sequence_number": 37, "view": "right"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[2.340476182599077, 48.85409170241058], [2.340532893473726, 48.85408605477867]]}, "properties": {"kind": "ray", "plate_id": "P0020", "det_id": "D00033", "sequence_number": 38, "view": "left"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[2.340476182599077, 48.85409170241058], [2.3404434198225377, 48.854115831668864]]}, "properties": {"kind": "ray", "plate_id": "P0019", "det_id": "D00034", "sequence_number": 38, "view": "right"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[2.340469825599077, 48.854062452410574], [2.3403801138840383, 48.85405229323502]]}, "properties": {"kind": "ray", "plate_id": "P0021", "det_id": "D00035", "sequence_number": 39, "view": "right"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[2.340436994599077, 48.854023042410574], [2.3404678888603963, 48.8539937305114]]}, "properties": {"kind": "ray", "plate_id": "P0022", "det_id": "D00036", "sequence_number": 40, "view": "left"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[2.340436994599077, 48.854023042410574], [2.3403801138840383, 48.85405229323502]]}, "properties": {"kind": "ray", "plate_id": "P0021", "det_id": "D00037", "sequence_number": 40, "view": "right"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[2.340418430599077, 48.853999336410574], [2.3404678888603963, 48.8539937305114]]}, "properties": {"kind": "ray", "plate_id": "P0022", "det_id": "D00038", "sequence_number": 41, "view": "left"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[2.340398438599077, 48.853955343410576], [2.340347364829136, 48.85394801712779]]}, "properties": {"kind": "ray", "plate_id": "P0023", "det_id": "D00039", "sequence_number": 42, "view": "right"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[2.3403869865990767, 48.85392197141057], [2.3404542431189204, 48.853897468089755]]}, "properties": {"kind": "ray", "plate_id": "P0024", "det_id": "D00040", "sequence_number": 43, "view": "left"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[2.3403869865990767, 48.85392197141057], [2.340347364829136, 48.85394801712779]]}, "properties": {"kind": "ray", "plate_id": "P0023", "det_id": "D00041", "sequence_number": 43, "view": "right"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[2.340365320599077, 48.85388202141058], [2.3404542431189204, 48.853897468089755]]}, "properties": {"kind": "ray", "plate_id": "P0024", "det_id": "D00042", "sequence_number": 44, "view": "left"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[2.340344355599077, 48.85382165941058], [2.3403961931591915, 48.85378883320664]]}, "properties": {"kind": "ray", "plate_id": "P0025", "det_id": "D00043", "sequence_number": 46, "view": "left"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[2.340344355599077, 48.85382165941058], [2.340292081546315, 48.853838855325755]]}, "properties": {"kind": "ray", "plate_id": "P0026", "det_id": "D00044", "sequence_number": 46, "view": "right"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[2.340319640599077, 48.85378642241057], [2.3403961931591915, 48.85378883320664]]}, "properties": {"kind": "ray", "plate_id": "P0025", "det_id": "D00045", "sequence_number": 47, "view": "left"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[2.340319640599077, 48.85378642241057], [2.3402672540230496, 48.853772682400525]]}, "properties": {"kind": "ray", "plate_id": "P0027", "det_id": "D00046", "sequence_number": 47, "view": "right"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[2.340302869599077, 48.85375291841058], [2.3402672540230496, 48.853772682400525]]}, "properties": {"kind": "ray", "plate_id": "P0027", "det_id": "D00047", "sequence_number": 48, "view": "right"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[2.340292218599077, 48.853714553410576], [2.340248989530312, 48.853717739194536]]}, "properties": {"kind": "ray", "plate_id": "P0028", "det_id": "D00048", "sequence_number": 49, "view": "right"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[2.3402690895990768, 48.85367717241058], [2.3401952353028697, 48.8536543840839]]}, "properties": {"kind": "ray", "plate_id": "P0029", "det_id": "D00049", "sequence_number": 50, "view": "right"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[2.340254069599077, 48.85362794341057], [2.3401952353028697, 48.8536543840839]]}, "properties": {"kind": "ray", "plate_id": "P0029", "det_id": "D00050", "sequence_number": 51, "view": "right"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[2.340254499599077, 48.85359741441057], [2.3402973071455877, 48.85359790183449]]}, "properties": {"kind": "ray", "plate_id": "P0030", "det_id": "D00051", "sequence_number": 52, "view": "left"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[2.340248284599077, 48.853577442410575], [2.3401445329543797, 48.85356464959443]]}, "properties": {"kind": "ray", "plate_id": "P0031", "det_id": "D00052", "sequence_number": 53, "view": "right"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[2.340230942599077, 48.85352473041058], [2.3401445329543797, 48.85356464959443]]}, "properties": {"kind": "ray", "plate_id": "P0031", "det_id": "D00053", "sequence_number": 54, "view": "right"}}]}, "expected": [{"sequence_number": 3, "picture_id": "demo-000003", "view": "right", "image": "000003_right.jpg", "n_expected": 1, "expected_addresses": "2 Rue des Grands Augustins", "expected_positions": "2 at 25% of width, 6 m"}, {"sequence_number": 4, "picture_id": "demo-000004", "view": "right", "image": "000004_right.jpg", "n_expected": 1, "expected_addresses": "2 Rue des Grands Augustins", "expected_positions": "2 at 71% of width, 6 m"}, {"sequence_number": 6, "picture_id": "demo-000006", "view": "left", "image": "000006_left.jpg", "n_expected": 1, "expected_addresses": "1 Rue des Grands Augustins", "expected_positions": "1 at 41% of width, 6 m"}, {"sequence_number": 9, "picture_id": "demo-000009", "view": "right", "image": "000009_right.jpg", "n_expected": 1, "expected_addresses": "4 Rue des Grands Augustins", "expected_positions": "4 at 36% of width, 4 m"}, {"sequence_number": 11, "picture_id": "demo-000011", "view": "left", "image": "000011_left.jpg", "n_expected": 1, "expected_addresses": "3 Rue des Grands Augustins", "expected_positions": "3 at 57% of width, 5 m"}, {"sequence_number": 12, "picture_id": "demo-000012", "view": "left", "image": "000012_left.jpg", "n_expected": 1, "expected_addresses": "3 Rue des Grands Augustins", "expected_positions": "3 at 15% of width, 6 m"}, {"sequence_number": 15, "picture_id": "demo-000015", "view": "right", "image": "000015_right.jpg", "n_expected": 1, "expected_addresses": "6 Rue des Grands Augustins", "expected_positions": "6 at 26% of width, 3 m"}, {"sequence_number": 16, "picture_id": "demo-000016", "view": "left", "image": "000016_left.jpg", "n_expected": 1, "expected_addresses": "5 Rue des Grands Augustins", "expected_positions": "5 at 65% of width, 4 m"}, {"sequence_number": 16, "picture_id": "demo-000016", "view": "right", "image": "000016_right.jpg", "n_expected": 1, "expected_addresses": "6 Rue des Grands Augustins", "expected_positions": "6 at 76% of width, 4 m"}, {"sequence_number": 20, "picture_id": "demo-000020", "view": "right", "image": "000020_right.jpg", "n_expected": 1, "expected_addresses": "1 Rue du Pont de Lodi", "expected_positions": "1 at 28% of width, 15 m"}, {"sequence_number": 21, "picture_id": "demo-000021", "view": "left", "image": "000021_left.jpg", "n_expected": 1, "expected_addresses": "7 Rue des Grands Augustins", "expected_positions": "7 at 44% of width, 5 m"}, {"sequence_number": 23, "picture_id": "demo-000023", "view": "left", "image": "000023_left.jpg", "n_expected": 1, "expected_addresses": "9 Rue des Grands Augustins", "expected_positions": "9 at 72% of width, 5 m"}, {"sequence_number": 24, "picture_id": "demo-000024", "view": "left", "image": "000024_left.jpg", "n_expected": 1, "expected_addresses": "9 Rue des Grands Augustins", "expected_positions": "9 at 11% of width, 4 m"}, {"sequence_number": 24, "picture_id": "demo-000024", "view": "right", "image": "000024_right.jpg", "n_expected": 1, "expected_addresses": "8 Rue des Grands Augustins", "expected_positions": "8 at 9% of width, 5 m"}, {"sequence_number": 25, "picture_id": "demo-000025", "view": "left", "image": "000025_left.jpg", "n_expected": 1, "expected_addresses": "11 Rue des Grands Augustins", "expected_positions": "11 at 78% of width, 4 m"}, {"sequence_number": 25, "picture_id": "demo-000025", "view": "right", "image": "000025_right.jpg", "n_expected": 1, "expected_addresses": "8 Rue des Grands Augustins", "expected_positions": "8 at 53% of width, 4 m"}, {"sequence_number": 26, "picture_id": "demo-000026", "view": "left", "image": "000026_left.jpg", "n_expected": 1, "expected_addresses": "11 Rue des Grands Augustins", "expected_positions": "11 at 32% of width, 6 m"}, {"sequence_number": 28, "picture_id": "demo-000028", "view": "left", "image": "000028_left.jpg", "n_expected": 1, "expected_addresses": "19 Rue de Savoie", "expected_positions": "19 at 81% of width, 11 m"}, {"sequence_number": 28, "picture_id": "demo-000028", "view": "right", "image": "000028_right.jpg", "n_expected": 1, "expected_addresses": "10 Rue des Grands Augustins", "expected_positions": "10 at 18% of width, 4 m"}, {"sequence_number": 29, "picture_id": "demo-000029", "view": "right", "image": "000029_right.jpg", "n_expected": 1, "expected_addresses": "10 Rue des Grands Augustins", "expected_positions": "10 at 87% of width, 4 m"}, {"sequence_number": 30, "picture_id": "demo-000030", "view": "left", "image": "000030_left.jpg", "n_expected": 1, "expected_addresses": "13 Rue des Grands Augustins", "expected_positions": "13 at 90% of width, 5 m"}, {"sequence_number": 30, "picture_id": "demo-000030", "view": "right", "image": "000030_right.jpg", "n_expected": 1, "expected_addresses": "12 Rue des Grands Augustins", "expected_positions": "12 at 11% of width, 5 m"}, {"sequence_number": 31, "picture_id": "demo-000031", "view": "left", "image": "000031_left.jpg", "n_expected": 1, "expected_addresses": "13 Rue des Grands Augustins", "expected_positions": "13 at 13% of width, 3 m"}, {"sequence_number": 31, "picture_id": "demo-000031", "view": "right", "image": "000031_right.jpg", "n_expected": 1, "expected_addresses": "12 Rue des Grands Augustins", "expected_positions": "12 at 71% of width, 5 m"}, {"sequence_number": 32, "picture_id": "demo-000032", "view": "left", "image": "000032_left.jpg", "n_expected": 1, "expected_addresses": "15 Rue des Grands Augustins", "expected_positions": "15 at 48% of width, 3 m"}, {"sequence_number": 34, "picture_id": "demo-000034", "view": "left", "image": "000034_left.jpg", "n_expected": 1, "expected_addresses": "17 Rue des Grands Augustins", "expected_positions": "17 at 35% of width, 3 m"}, {"sequence_number": 35, "picture_id": "demo-000035", "view": "right", "image": "000035_right.jpg", "n_expected": 1, "expected_addresses": "14 Rue des Grands Augustins", "expected_positions": "14 at 41% of width, 5 m"}, {"sequence_number": 37, "picture_id": "demo-000037", "view": "right", "image": "000037_right.jpg", "n_expected": 1, "expected_addresses": "16 Rue des Grands Augustins", "expected_positions": "16 at 42% of width, 6 m"}, {"sequence_number": 38, "picture_id": "demo-000038", "view": "left", "image": "000038_left.jpg", "n_expected": 1, "expected_addresses": "19 Rue des Grands Augustins", "expected_positions": "19 at 34% of width, 4 m"}, {"sequence_number": 38, "picture_id": "demo-000038", "view": "right", "image": "000038_right.jpg", "n_expected": 1, "expected_addresses": "16 Rue des Grands Augustins", "expected_positions": "16 at 84% of width, 5 m"}, {"sequence_number": 40, "picture_id": "demo-000040", "view": "left", "image": "000040_left.jpg", "n_expected": 1, "expected_addresses": "21 Rue des Grands Augustins", "expected_positions": "21 at 84% of width, 5 m"}, {"sequence_number": 40, "picture_id": "demo-000040", "view": "right", "image": "000040_right.jpg", "n_expected": 1, "expected_addresses": "18 Rue des Grands Augustins", "expected_positions": "18 at 70% of width, 4 m"}, {"sequence_number": 41, "picture_id": "demo-000041", "view": "left", "image": "000041_left.jpg", "n_expected": 1, "expected_addresses": "21 Rue des Grands Augustins", "expected_positions": "21 at 46% of width, 5 m"}, {"sequence_number": 42, "picture_id": "demo-000042", "view": "right", "image": "000042_right.jpg", "n_expected": 1, "expected_addresses": "20 Rue des Grands Augustins", "expected_positions": "20 at 15% of width, 4 m"}, {"sequence_number": 43, "picture_id": "demo-000043", "view": "left", "image": "000043_left.jpg", "n_expected": 1, "expected_addresses": "23 Rue des Grands Augustins", "expected_positions": "23 at 62% of width, 5 m"}, {"sequence_number": 43, "picture_id": "demo-000043", "view": "right", "image": "000043_right.jpg", "n_expected": 1, "expected_addresses": "20 Rue des Grands Augustins", "expected_positions": "20 at 75% of width, 4 m"}, {"sequence_number": 46, "picture_id": "demo-000046", "view": "right", "image": "000046_right.jpg", "n_expected": 1, "expected_addresses": "22 Rue des Grands Augustins", "expected_positions": "22 at 54% of width, 4 m"}, {"sequence_number": 47, "picture_id": "demo-000047", "view": "left", "image": "000047_left.jpg", "n_expected": 1, "expected_addresses": "25 Rue des Grands Augustins", "expected_positions": "25 at 37% of width, 5 m"}, {"sequence_number": 48, "picture_id": "demo-000048", "view": "right", "image": "000048_right.jpg", "n_expected": 1, "expected_addresses": "24 Rue des Grands Augustins", "expected_positions": "24 at 74% of width, 3 m"}, {"sequence_number": 49, "picture_id": "demo-000049", "view": "right", "image": "000049_right.jpg", "n_expected": 1, "expected_addresses": "26 Rue des Grands Augustins", "expected_positions": "26 at 31% of width, 3 m"}, {"sequence_number": 52, "picture_id": "demo-000052", "view": "left", "image": "000052_left.jpg", "n_expected": 1, "expected_addresses": "27 Rue des Grands Augustins", "expected_positions": "27 at 45% of width, 3 m"}, {"sequence_number": 54, "picture_id": "demo-000054", "view": "right", "image": "000054_right.jpg", "n_expected": 1, "expected_addresses": "30 Rue des Grands Augustins", "expected_positions": "30 at 80% of width, 5 m"}]}</script>
+<script>
+(function () {
+'use strict';
+
+/* ---------- Data ---------- */
+var DATA = JSON.parse(document.getElementById('report-data').textContent);
+var S = DATA.statuses || {};
+var SUM = DATA.summary || {};
+var F = (DATA.geojson && DATA.geojson.features) || [];
+var EXP = DATA.expected || [];
+var MODE = SUM.mode || 'verify';
+function byKind(k) { return F.filter(function (f) { return f.properties && f.properties.kind === k; }); }
+var photos = byKind('photo').sort(function (a, b) { return a.properties.sequence_number - b.properties.sequence_number; });
+var addrs = byKind('address');
+var plates = byKind('plate');
+var rays = byKind('ray');
+var links = byKind('link');
+var $ = function (id) { return document.getElementById(id); };
+
+/* ---------- Helpers ---------- */
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+function info(st) { return S[st] || { label: st || '-', color: '#6b7280', meaning: '', problem: false }; }
+function rgb(h) {
+  h = String(h || '').replace('#', '');
+  if (h.length === 3) h = h.replace(/(.)/g, '$1$1');
+  var n = parseInt(h, 16);
+  if (h.length !== 6 || isNaN(n)) return [107, 114, 128];
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+function lumOf(c) {
+  var v = c.map(function (x) { x /= 255; return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4); });
+  return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2];
+}
+function lum(h) { return lumOf(rgb(h)); }
+function textOn(h) { var L = lum(h); return (1.05 / (L + 0.05)) >= ((L + 0.05) / 0.0685) ? '#ffffff' : '#1f2937'; }
+function inkOf(h) {
+  var c = rgb(h);
+  for (var i = 0; i < 8 && 1.05 / (lumOf(c) + 0.05) < 4.5; i++) c = c.map(function (x) { return Math.round(x * 0.8); });
+  return 'rgb(' + c.join(',') + ')';
+}
+function tint(h, a) { var c = rgb(h); return 'rgba(' + c[0] + ',' + c[1] + ',' + c[2] + ',' + a + ')'; }
+function isLight(h) { return lum(h) > 0.5; }
+function pill(st) {
+  if (!st) return '';
+  var c = info(st).color;
+  return '<span class="pill" style="background:' + c + ';color:' + textOn(c) + '">' + esc(info(st).label) + '</span>';
+}
+function list(v) {
+  if (v == null || v === '') return [];
+  return String(v).split(';').map(function (s) { return s.trim(); }).filter(Boolean);
+}
+function num(v, d) {
+  if (v == null || v === '') return null;
+  var n = Number(v);
+  return isNaN(n) ? null : n.toFixed(d == null ? 1 : d);
+}
+function meters(v) { var s = num(v, 1); return s == null ? null : s + ' m'; }
+function ll(f) { return [f.geometry.coordinates[1], f.geometry.coordinates[0]]; }
+function store(k, v) {
+  try {
+    if (v === undefined) return window.localStorage.getItem(k);
+    window.localStorage.setItem(k, v);
+  } catch (e) { /* storage blocked */ }
+  return null;
+}
+function isMobile() { return window.matchMedia('(max-width: 900px)').matches; }
+function fmtTime(iso, where) {
+  if (!iso) return null;
+  var d = new Date(String(iso).replace(/(\.\d{3})\d+/, '$1'));
+  if (isNaN(d.getTime())) return String(iso);
+  var opts = { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' };
+  if (where === 'paris') opts.timeZone = 'Europe/Paris';
+  try {
+    return new Intl.DateTimeFormat('en-GB', opts).format(d) + (where === 'paris' ? ' (Paris time)' : '');
+  } catch (e) {
+    return d.toISOString().slice(0, 16).replace('T', ' ') + ' UTC';
+  }
+}
+function fmtBearing(b) {
+  if (b == null || b === '' || isNaN(Number(b))) return null;
+  var n = ((Number(b) % 360) + 360) % 360;
+  var names = ['north', 'north-east', 'east', 'south-east', 'south', 'south-west', 'west', 'north-west'];
+  return Math.round(n) % 360 + '\u00b0 (' + names[Math.round(n / 45) % 8] + ')';
+}
+function countBy(fs) {
+  var c = {};
+  fs.forEach(function (f) { var s = f.properties.status; if (s) c[s] = (c[s] || 0) + 1; });
+  return c;
+}
+var ORDER = Object.keys(S);
+function present(c) {
+  return ORDER.filter(function (k) { return c[k]; })
+    .concat(Object.keys(c).filter(function (k) { return ORDER.indexOf(k) < 0; }));
+}
+var aCounts = countBy(addrs);
+var pCounts = MODE === 'verify' ? countBy(plates) : {};
+
+var PATHS = {
+  check: 'M4.5 12.75l6 6 9-13.5',
+  swap: 'M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5M16.5 3l4.5 4.5m0 0L16.5 12M21 7.5H7.5',
+  pin: 'M15 10.5a3 3 0 11-6 0 3 3 0 016 0zM19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z',
+  q: 'M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M12 18h.01',
+  minus: 'M6 12h12',
+  warn: 'M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z',
+  eye: 'M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178zM15 12a3 3 0 11-6 0 3 3 0 016 0z',
+  eyeoff: 'M3 3l18 18M10.6 10.6a2 2 0 002.8 2.8M9.9 4.6A9.5 9.5 0 0112 4.5c4.6 0 8.6 3 10 7.5a10.4 10.4 0 01-2.9 4.4M6.6 6.6A10.4 10.4 0 002 12c1.4 4.5 5.4 7.5 10 7.5 1.6 0 3.1-.4 4.4-1',
+  info: 'M12 8v.01M11 12h1v4h1M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
+  ban: 'M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636',
+  expand: 'M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5'
+};
+var ICON = {
+  CORRECT: 'check', WRONG_SIDE: 'swap', OUT_OF_PLACE: 'pin', UNKNOWN_NUMBER: 'q', SUFFIX_MISMATCH: 'minus',
+  NOT_FOUND: 'warn', NOT_COVERED: 'eye', IN_VIEW: 'eye', UNREADABLE: 'eyeoff', UNCERTAIN: 'info', NO_ADDRESS_NEARBY: 'ban'
+};
+function svg(name) {
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + (PATHS[name] || PATHS.info) + '"/></svg>';
+}
+
+/* ---------- State ---------- */
+var state = { filter: null, tab: 'addresses', q: '', sort: {}, sel: null };
+function kindOfTab(t) { return t === 'addresses' ? 'address' : t === 'plates' ? 'plate' : 'photo'; }
+function passes(kind, f) {
+  if (!state.filter) return true;
+  return state.filter.kind === kind && f.properties.status === state.filter.status;
+}
+function idOf(kind, p) { return String(kind === 'address' ? p.address_id : kind === 'plate' ? p.plate_id : p.sequence_number); }
+function findF(kind, id) {
+  var src = kind === 'address' ? addrs : kind === 'plate' ? plates : photos;
+  for (var i = 0; i < src.length; i++) if (idOf(kind, src[i].properties) === String(id)) return src[i];
+  return null;
+}
+
+/* ---------- Top bar ---------- */
+(function () {
+  var parts = [MODE === 'inspect' ? 'Inspection (no plates labelled)' : 'Verification'];
+  var ph = SUM.photos || {};
+  parts.push((ph.usable != null ? ph.usable : photos.length) + ' usable photos of ' + (ph.total != null ? ph.total : photos.length));
+  if (MODE === 'verify') parts.push(((SUM.detections || {}).total || 0) + ' detections, ' + plates.length + ' plates');
+  parts.push(addrs.length + ' addresses checked');
+  var cal = SUM.calibration || {};
+  if (cal.applied) parts.push('GPS offset corrected: ' + cal.offset_m + ' m');
+  if (SUM.generated_at) parts.push('generated ' + fmtTime(SUM.generated_at, 'local'));
+  var text = parts.join(' \u00b7 ');
+  $('subtitle').innerHTML = esc(text) + (SUM.demo ? '<span class="badge">Synthetic demo data</span>' : '');
+  $('subtitle').title = text;
+})();
+
+/* ---------- Result cards ---------- */
+function cardsHtml(kind, c, title) {
+  var ks = present(c);
+  if (!ks.length) return '';
+  return '<div class="cgroup glass" role="group" aria-label="' + title + ' results"><span class="cgroup-label">' + title + '</span>' +
+    ks.map(function (st) {
+      var col = info(st).color;
+      return '<button type="button" class="card" aria-pressed="false" data-kind="' + kind + '" data-st="' + esc(st) + '" title="' + esc(info(st).meaning) + '">' +
+        '<span class="ic" style="background:' + col + ';color:' + textOn(col) + '">' + svg(ICON[st]) + '</span>' +
+        '<b>' + c[st] + '</b><span class="lb" style="color:' + inkOf(col) + '">' + esc(info(st).label) + '</span></button>';
+    }).join('') + '</div>';
+}
+$('cards').innerHTML = cardsHtml('address', aCounts, 'Addresses') + cardsHtml('plate', pCounts, 'Plates');
+function setFilter(kind, st) {
+  if (!kind || (state.filter && state.filter.kind === kind && state.filter.status === st)) state.filter = null;
+  else state.filter = { kind: kind, status: st };
+  refreshCards();
+  drawMarkers();
+  if (state.filter) setTab(state.filter.kind === 'plate' ? 'plates' : 'addresses', true);
+  else buildTable();
+}
+function refreshCards() {
+  document.querySelectorAll('#cards .card').forEach(function (b) {
+    var on = !!state.filter && state.filter.kind === b.dataset.kind && state.filter.status === b.dataset.st;
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
+}
+$('cards').addEventListener('click', function (e) {
+  var b = e.target.closest('.card');
+  if (b) setFilter(b.dataset.kind, b.dataset.st);
+});
+
+/* ---------- Legend ---------- */
+function lg(sym, label, n) {
+  return '<div class="lg"><span class="sym">' + sym + '</span><span>' + esc(label) + '</span>' + (n != null ? '<span class="n">' + n + '</span>' : '') + '</div>';
+}
+(function () {
+  var h = '<div class="lg-t">Photos</div>' + lg('<span class="route"></span>', 'Route and photos used') +
+    lg('<span class="ring"></span>', 'Skipped photo');
+  var ak = present(aCounts);
+  if (ak.length) {
+    h += '<div class="lg-t">Addresses (circles)</div>' + ak.map(function (st) {
+      return lg('<span class="dot" style="background:' + info(st).color + '"></span>', info(st).label, aCounts[st]);
+    }).join('');
+  }
+  var pk = present(pCounts);
+  if (pk.length) {
+    h += '<div class="lg-t">Plates (diamonds)</div>' + pk.map(function (st) {
+      return lg('<span class="dia" style="background:' + info(st).color + '"></span>', info(st).label, pCounts[st]);
+    }).join('');
+  }
+  h += '<div class="lg-t">After a click</div>';
+  if (MODE === 'verify') {
+    h += lg('<span class="ln dash"></span>', 'Sight line from a photo') +
+      lg('<span class="ln"></span>', 'To the official position of the number read (colour of the plate result)');
+  }
+  h += lg('<span class="sel-ring"></span>', 'Selected item');
+  h += '<div class="lg-foot">plateverif ' + esc(SUM.version || '') + '</div>';
+  $('lg-body').innerHTML = h;
+  var saved = store('plateverif.legend');
+  setLegend(saved === null ? !isMobile() : saved === '1', false);
+})();
+function setLegend(open, save) {
+  $('legend').classList.toggle('closed', !open);
+  $('lg-head').setAttribute('aria-expanded', open ? 'true' : 'false');
+  if (save) store('plateverif.legend', open ? '1' : '0');
+}
+$('lg-head').addEventListener('click', function () { setLegend($('legend').classList.contains('closed'), true); });
+
+/* ---------- Map ---------- */
+var hasMap = typeof window.L !== 'undefined' && typeof window.L.map === 'function';
+var map = null;
+var G = {};
+if (!hasMap) {
+  $('map-off').hidden = false;
+} else {
+  map = L.map('map', { zoomControl: false, preferCanvas: true });
+  if (map.attributionControl) map.attributionControl.setPrefix(false);
+  var esriBase = 'https:' + '//' + 'server.arcgisonline.com/ArcGIS/rest/services/';
+  var tilePath = '/MapServer/tile/' + '{z}/{y}/{x}';
+  var osmCredit = '&copy; <a href="https:' + '//' + 'www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors';
+  var streets;
+  if (location.protocol === 'file:') {
+    // OpenStreetMap blocks tile requests without a Referer (pages opened from disk), so use Esri here.
+    streets = L.tileLayer(esriBase + 'World_Street_Map' + tilePath, {
+      maxNativeZoom: 18, maxZoom: 20, className: 'tiles-soft',
+      attribution: 'Tiles &copy; Esri &mdash; Source: Esri and its data partners'
+    });
+  } else {
+    streets = L.tileLayer('https:' + '//' + 'tile.openstreetmap.org/' + '{z}/{x}/{y}' + '.png', {
+      maxNativeZoom: 19, maxZoom: 20, className: 'tiles-soft', attribution: osmCredit
+    });
+  }
+  var satellite = L.tileLayer(esriBase + 'World_Imagery' + tilePath, {
+    maxNativeZoom: 19, maxZoom: 20,
+    attribution: 'Imagery &copy; Esri &mdash; Source: Esri and its data partners'
+  });
+  (store('plateverif.base') === 'satellite' ? satellite : streets).addTo(map);
+  var tileErrors = 0;
+  streets.on('tileerror', function () {
+    tileErrors++;
+    if (tileErrors === 6 && map.hasLayer(streets)) { map.removeLayer(streets); satellite.addTo(map); }
+  });
+  map.on('baselayerchange', function (e) { store('plateverif.base', e.layer === satellite ? 'satellite' : 'streets'); });
+
+  G.route = L.layerGroup().addTo(map);
+  G.skipped = L.layerGroup().addTo(map);
+  G.items = L.layerGroup().addTo(map);
+  G.sel = L.layerGroup().addTo(map);
+  L.control.layers({ 'Streets': streets, 'Satellite': satellite }, { 'Route and photos': G.route, 'Skipped photos': G.skipped }, { position: 'topright' }).addTo(map);
+  L.control.zoom({ position: 'bottomright' }).addTo(map);
+  var FitControl = L.Control.extend({
+    options: { position: 'bottomright' },
+    onAdd: function () {
+      var box = L.DomUtil.create('div', 'leaflet-bar');
+      var a = L.DomUtil.create('a', '', box);
+      a.href = '#';
+      a.title = 'Show the whole route';
+      a.setAttribute('role', 'button');
+      a.setAttribute('aria-label', 'Show the whole route');
+      a.innerHTML = svg('expand');
+      L.DomEvent.on(a, 'click', function (e) { L.DomEvent.preventDefault(e); fitAll(); });
+      L.DomEvent.disableClickPropagation(box);
+      return box;
+    }
+  });
+  new FitControl().addTo(map);
+
+  var used = photos.filter(function (p) { return p.properties.valid; });
+  var segs = [], cur = [];
+  used.forEach(function (p, i) {
+    var pt = ll(p);
+    if (cur.length && distM(ll(used[i - 1]), pt) > 15) { if (cur.length > 1) segs.push(cur); cur = []; }
+    cur.push(pt);
+  });
+  if (cur.length > 1) segs.push(cur);
+  if (segs.length) L.polyline(segs, { color: '#3b82f6', weight: 3, opacity: 0.55, interactive: false }).addTo(G.route);
+  photos.forEach(function (p) {
+    var pr = p.properties;
+    var style = pr.valid
+      ? { radius: 3, color: '#1d4ed8', weight: 1, fillColor: '#3b82f6', fillOpacity: 0.95 }
+      : { radius: 3, color: '#94a3b8', weight: 1.5, fillColor: '#ffffff', fillOpacity: 1 };
+    L.circleMarker(ll(p), style)
+      .bindTooltip('Photo ' + esc(pr.sequence_number) + (pr.valid ? '' : ' (skipped)'))
+      .on('click', function () { select('photo', pr.sequence_number, false); })
+      .addTo(pr.valid ? G.route : G.skipped);
+  });
+}
+function distM(a, b) {
+  var R = 6371000, r = Math.PI / 180;
+  var dLat = (b[0] - a[0]) * r, dLon = (b[1] - a[1]) * r;
+  var h = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(a[0] * r) * Math.cos(b[0] * r) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+function drawMarkers() {
+  if (!hasMap) return;
+  G.items.clearLayers();
+  addrs.forEach(function (a) {
+    if (!passes('address', a)) return;
+    var pr = a.properties, c = info(pr.status).color;
+    L.circleMarker(ll(a), { radius: 7, color: isLight(c) ? '#64748b' : '#ffffff', weight: 2, fillColor: c, fillOpacity: 1 })
+      .bindTooltip(esc(pr.address) + ' \u00b7 ' + esc(info(pr.status).label))
+      .on('click', function () { select('address', pr.address_id, false); })
+      .addTo(G.items);
+  });
+  plates.forEach(function (p) {
+    if (!passes('plate', p)) return;
+    var pr = p.properties, c = info(pr.status).color;
+    var icon = L.divIcon({ className: 'pmark', html: '<div style="background:' + c + '"></div>', iconSize: [16, 16], iconAnchor: [8, 8] });
+    L.marker(ll(p), { icon: icon, keyboard: false, riseOnHover: true })
+      .bindTooltip('Plate ' + esc(pr.plate_id) + ' reads ' + esc(pr.reading_display || '?') + ' \u00b7 ' + esc(info(pr.status).label))
+      .on('click', function () { select('plate', pr.plate_id, false); })
+      .addTo(G.items);
+  });
+}
+function lineOf(f) { return f.geometry.coordinates.map(function (c) { return [c[1], c[0]]; }); }
+function drawSelection(kind, f) {
+  if (!hasMap) return;
+  G.sel.clearLayers();
+  var p = f.properties;
+  var ids = kind === 'address' ? list(p.plates) : kind === 'plate' ? [p.plate_id] : [];
+  rays.forEach(function (r) {
+    var rp = r.properties;
+    var hit = kind === 'photo' ? String(rp.sequence_number) === String(p.sequence_number) : ids.indexOf(rp.plate_id) >= 0;
+    if (hit) L.polyline(lineOf(r), { color: '#1d4ed8', weight: 1.8, dashArray: '5 4', opacity: 0.9, interactive: false }).addTo(G.sel);
+  });
+  if (kind !== 'photo') {
+    links.forEach(function (r) {
+      if (ids.indexOf(r.properties.plate_id) >= 0) {
+        L.polyline(lineOf(r), { color: info(r.properties.status).color, weight: 3, opacity: 0.95 })
+          .bindTooltip('Official position of the number read on plate ' + esc(r.properties.plate_id))
+          .addTo(G.sel);
+      }
+    });
+  }
+  L.circleMarker(ll(f), { radius: kind === 'photo' ? 8 : 12, color: '#111827', weight: 2, fill: false, interactive: false }).addTo(G.sel);
+}
+function pads() {
+  var W = window.innerWidth, H = window.innerHeight;
+  var top = 16, bottom = 16, left = 16, right = 16;
+  var cr = $('cards').getBoundingClientRect();
+  var tr = $('topbar').getBoundingClientRect();
+  top = Math.max(top, (cr.height > 0 ? cr.bottom : tr.bottom) + 12);
+  bottom = Math.max(bottom, H - $('drawer').getBoundingClientRect().top + 12);
+  if (isMobile()) {
+    if ($('panel').classList.contains('open')) bottom = Math.max(bottom, Math.round(H * 0.68) + 12);
+  } else {
+    right = Math.max(right, W - $('panel').getBoundingClientRect().left + 12);
+  }
+  if (top + bottom > H - 80) bottom = Math.max(16, H - 80 - top);
+  return { tl: [left, top], br: [right, bottom] };
+}
+function fitAll() {
+  if (!hasMap) return;
+  var pts = photos.filter(function (p) { return p.properties.valid; }).map(ll).concat(addrs.map(ll));
+  if (!pts.length) pts = photos.map(ll);
+  if (!pts.length) { map.setView([48.8566, 2.3522], 13); return; }
+  var p = pads();
+  map.fitBounds(L.latLngBounds(pts), { paddingTopLeft: p.tl, paddingBottomRight: p.br, maxZoom: 19 });
+}
+function focusOn(latlng) {
+  if (!hasMap) return;
+  var z = Math.max(map.getZoom() || 0, 18);
+  var p = pads();
+  var offset = L.point((p.tl[0] - p.br[0]) / 2, (p.tl[1] - p.br[1]) / 2);
+  map.setView(map.unproject(map.project(latlng, z).subtract(offset), z), z);
+}
+
+/* ---------- Detail panel ---------- */
+function kv(rows) {
+  var h = '';
+  rows.forEach(function (r) {
+    if (!r || r[1] == null || r[1] === '') return;
+    h += '<div class="k">' + esc(r[0]) + '</div><div class="v">' + (r[2] ? r[1] : esc(r[1])) + '</div>';
+  });
+  return h ? '<div class="kv">' + h + '</div>' : '';
+}
+function sec(title, body) { return body ? '<div class="sec"><div class="sec-t">' + esc(title) + '</div>' + body + '</div>' : ''; }
+function goChips(kind, ids) {
+  if (!ids.length) return null;
+  return '<div class="chips">' + ids.map(function (id) {
+    return '<button type="button" class="chip" data-go="' + kind + '" data-id="' + esc(id) + '" title="Show ' + kind + ' ' + esc(id) + '">' + esc(id) + '</button>';
+  }).join('') + '</div>';
+}
+function textChips(ids) {
+  if (!ids.length) return null;
+  return '<div class="chips">' + ids.map(function (id) { return '<span class="chip" title="' + esc(id) + '">' + esc(id) + '</span>'; }).join('') + '</div>';
+}
+function explain(text, color) {
+  if (!text) return '';
+  return '<div class="explain" style="background:' + tint(color, 0.09) + ';border-color:' + tint(color, 0.3) + '">' + esc(text) + '</div>';
+}
+function meter(level, note) {
+  if (!level) return '';
+  var n = { low: 1, medium: 2, high: 3 }[level] || 0;
+  var col = ['#94a3b8', '#dc2626', '#d97706', '#16a34a'][n];
+  var bars = '';
+  for (var i = 1; i <= 3; i++) bars += '<i' + (i <= n ? ' style="background:' + col + '"' : '') + '></i>';
+  return '<div class="sec"><div class="sec-t">Confidence</div><div class="conf"><b style="color:' + inkOf(col) + '">' + esc(level) + '</b>' +
+    '<div class="meter" aria-hidden="true">' + bars + '</div><div class="sub">' + esc(note) + '</div></div></div>';
+}
+function tech(rows) { var b = kv(rows); return b ? '<details class="tech"><summary>Technical details</summary>' + b + '</details>' : ''; }
+var LINES_HINT = '<div class="hint"><span class="ln dash"></span>Dashed: sight line from each photo</div>' +
+  '<div class="hint"><span class="ln"></span>Solid: to the official position of the number read</div>';
+
+function parseVotes(s) {
+  if (!s) return [];
+  return String(s).split(/\s*,\s*/).map(function (x) {
+    var m = x.match(/^(.*?)\s+x([\d.]+)$/);
+    return m ? { t: m[1], w: parseFloat(m[2]) } : { t: x, w: 1 };
+  }).filter(function (v) { return v.t; });
+}
+function readingText(p) {
+  var votes = parseVotes(p.readings);
+  if (!p.reading_display && !votes.length) return 'Not readable';
+  if (votes.length <= 1) {
+    var n = Number(p.n_detections) || 1;
+    return (p.reading_display || votes[0].t) + (n > 1 ? ' (all ' + n + ' readings agree)' : ' (1 reading)');
+  }
+  var total = votes.reduce(function (s, v) { return s + v.w; }, 0) || 1;
+  return votes.map(function (v) { return v.t + ' (' + Math.round(100 * v.w / total) + '%)'; }).join(', ') +
+    (p.reading_display ? '; kept: ' + p.reading_display : '; no clear majority');
+}
+var LOCATED = {
+  'sight lines crossing': function (p) { return 'Sight lines from ' + p.n_photos + ' photos crossing'; },
+  'single sight line': function () { return 'One photo: sight line and facade distance'; },
+  'assumed distance': function () { return 'One photo: assumed distance (weak)'; }
+};
+
+function addressPanel(p) {
+  var plateIds = list(p.plates);
+  var side = p.side ? (p.side === 'left' ? 'Left' : p.side === 'right' ? 'Right' : p.side) + ' of the driving direction' : null;
+  var note = p.status === 'NOT_FOUND'
+    ? 'Based on how many photos showed this facade without a plate.'
+    : 'How strong the evidence is. It does not change the result.';
+  return '<div class="kicker">Official address</div><h2>' + esc(p.address) + '</h2>' + pill(p.status) +
+    explain(p.explanation, info(p.status).color) +
+    sec('Evidence', kv([
+      ['Side of the street', side],
+      ['Photos where it should be visible', goChips('photo', list(p.photos_in_view)), true],
+      ['Plates matched', goChips('plate', plateIds), true],
+      ['Plate reads', list(p.readings).join(', ') || null],
+      ['Corner building', p.is_corner ? 'Yes: a number of the crossing street can appear here' : null]
+    ])) +
+    meter(p.confidence, note) +
+    (plateIds.length ? '<div class="sec">' + LINES_HINT + '</div>' : '') +
+    tech([
+      ['Address id', p.address_id],
+      ['Street id', p.street_id],
+      ['Facade direction', p.facade_bearing_deg != null ? Math.round(p.facade_bearing_deg) + '\u00b0' : null],
+      ['Confidence score', num(p.confidence_score, 2)],
+      ['Notes', p.notes]
+    ]);
+}
+function platePanel(p) {
+  var loc = LOCATED[p.located_by] ? LOCATED[p.located_by](p) : p.located_by;
+  var belongs = p.official_address_of_reading
+    ? p.official_address_of_reading + (p.official_distance_m != null ? ' (' + num(p.official_distance_m, 1) + ' m from the plate)' : '')
+    : (p.reading_display ? 'Not in the register nearby' : null);
+  var posErr = p.position_error_m == null ? null
+    : (Number(p.n_photos) >= 3 ? num(p.position_error_m, 2) + ' m' : 'Not measurable with ' + p.n_photos + ' photos (needs 3 or more)');
+  return '<div class="kicker">Plate seen in the photos</div><h2>Plate ' + esc(p.plate_id) + ': <span class="mono">' + esc(p.reading_display || '?') + '</span></h2>' +
+    pill(p.status) + explain(p.explanation, info(p.status).color) +
+    sec('What was read', kv([
+      ['Reads', readingText(p)],
+      ['Crop', p.view === 'left' ? 'Left crop' : p.view === 'right' ? 'Right crop' : p.view],
+      ['Photos', goChips('photo', list(p.photos)), true],
+      ['Image files', textChips(list(p.images)), true]
+    ])) +
+    sec('Where it is', kv([
+      ['Position found by', loc],
+      ['Official address at this spot', p.expected_address || 'None matched'],
+      ['Distance to it', p.expected_address ? meters(p.match_distance_m) : null],
+      ['This number belongs to', belongs]
+    ])) +
+    meter(p.confidence, 'How strong the evidence is: number of photos, agreement of the readings and geometry. It does not change the result.') +
+    '<div class="sec">' + LINES_HINT + '</div>' +
+    tech([
+      ['Position error', posErr],
+      ['Angle between sight lines', p.sight_line_angle_deg != null ? num(p.sight_line_angle_deg, 1) + '\u00b0' : null],
+      ['Match method', p.match_method],
+      ['Ambiguous match', p.ambiguous_match ? 'Yes' : null],
+      ['Detection confidence', num(p.mean_det_conf, 2)],
+      ['Reading confidence', num(p.mean_ocr_conf, 2)],
+      ['Confidence score', num(p.confidence_score, 2)],
+      ['Detections', textChips(list(p.detection_ids)), true],
+      ['Result before corner rule', p.raw_status && p.raw_status !== p.status ? info(p.raw_status).label : null]
+    ]);
+}
+function photoPanel(p) {
+  var seq = String(p.sequence_number);
+  var exp = EXP.filter(function (e) { return String(e.sequence_number) === seq; });
+  var plateIds = [];
+  rays.forEach(function (r) {
+    if (String(r.properties.sequence_number) === seq && plateIds.indexOf(r.properties.plate_id) < 0) plateIds.push(r.properties.plate_id);
+  });
+  var link = p.source_url && /^https?:\/\//i.test(p.source_url)
+    ? '<a href="' + esc(p.source_url) + '" target="_blank" rel="noopener">Open the original photo</a>' : null;
+  var expHtml = exp.map(function (e) {
+    var items = String(e.expected_positions || '').split(';').map(function (s) { return s.trim(); }).filter(Boolean);
+    var name = e.view === 'left' ? 'Left crop' : e.view === 'right' ? 'Right crop' : String(e.view || '');
+    return '<div class="exp"><div class="exp-h">' + esc(name) + ' <span class="sub mono">' + esc(e.image || '') + '</span></div>' +
+      (items.length ? '<ul>' + items.map(function (i) { return '<li>' + esc(i) + '</li>'; }).join('') + '</ul>' : '<div class="sub">None</div>') + '</div>';
+  }).join('');
+  return '<div class="kicker">Photo</div><h2>Photo ' + esc(seq) + '</h2>' +
+    (p.valid ? '<span class="pill" style="background:#dbeafe;color:#1e3a8a">Used</span>'
+      : '<span class="pill" style="background:#e2e8f0;color:#334155">Skipped</span>' + explain('Not used: ' + (p.skip_reason || 'no reason given') + '.', '#64748b')) +
+    sec('Details', kv([
+      ['Taken', fmtTime(p.datetime, 'paris')],
+      ['Driving direction', fmtBearing(p.travel_bearing)],
+      ['Distance to the street', meters(p.distance_to_street_m)],
+      ['Plates boxed', p.n_detections != null ? String(p.n_detections) : null],
+      ['Plates linked', goChips('plate', plateIds), true],
+      ['Original', link, true]
+    ])) +
+    (exp.length ? sec('Addresses that should be visible', expHtml) : '') +
+    (plateIds.length ? '<div class="sec"><div class="hint"><span class="ln dash"></span>Dashed: sight lines from this photo</div></div>' : '') +
+    tech([['Picture id', p.picture_id]]);
+}
+function renderIntro() {
+  var attn = [];
+  present(pCounts).forEach(function (st) { if (info(st).problem || st === 'UNCERTAIN') attn.push({ kind: 'plate', st: st, n: pCounts[st] }); });
+  present(aCounts).forEach(function (st) { if (info(st).problem) attn.push({ kind: 'address', st: st, n: aCounts[st] }); });
+  var h = '<div class="kicker">Overview</div><h2>How to read this report</h2>' +
+    '<p class="lead">Circles are official addresses from the Paris register, coloured by result. Diamonds are plates seen in the photos. Click one of them, or a table row, to see why it got its result.</p>' +
+    '<p class="lead">Addresses answer "is the expected plate there?". Plates answer "is the plate that is there correct?". A missing plate only appears on the address side, a wrong plate on the plate side.</p>';
+  if (MODE === 'inspect') h += '<p class="lead">Inspection mode: no plates were labelled yet. Each address lists the photos where it should be visible.</p>';
+  if (attn.length) {
+    h += sec('To review first', '<div class="attn">' + attn.map(function (a) {
+      return '<button type="button" class="attn-row" data-fkind="' + a.kind + '" data-fst="' + esc(a.st) + '">' + pill(a.st) +
+        '<span class="sub">' + (a.kind === 'plate' ? 'plates' : 'addresses') + '</span><b>' + a.n + '</b></button>';
+    }).join('') + '</div>');
+  }
+  var w = SUM.warnings || [];
+  if (w.length) h += sec('Warnings', '<ul class="warn">' + w.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>');
+  $('panel-body').innerHTML = h;
+  $('panel').classList.remove('has-sel');
+}
+function select(kind, id, pan) {
+  var f = findF(kind, id);
+  if (!f) return;
+  state.sel = { kind: kind, id: String(id) };
+  var p = f.properties;
+  $('panel-body').innerHTML = kind === 'address' ? addressPanel(p) : kind === 'plate' ? platePanel(p) : photoPanel(p);
+  $('panel-body').scrollTop = 0;
+  $('panel').classList.add('has-sel');
+  if (isMobile()) $('panel').classList.add('open');
+  drawSelection(kind, f);
+  if (pan) focusOn(ll(f));
+  markRow();
+}
+function clearSel() {
+  state.sel = null;
+  if (hasMap) G.sel.clearLayers();
+  $('panel').classList.remove('open');
+  renderIntro();
+  markRow();
+}
+$('panel-close').addEventListener('click', clearSel);
+$('panel-body').addEventListener('click', function (e) {
+  var go = e.target.closest('[data-go]');
+  if (go) { select(go.dataset.go, go.dataset.id, true); return; }
+  var fl = e.target.closest('[data-fkind]');
+  if (fl) setFilter(fl.dataset.fkind, fl.dataset.fst);
+});
+
+/* ---------- Tables ---------- */
+var CONF_RANK = function (p) { return { low: 1, medium: 2, high: 3 }[p.confidence] || 0; };
+var COLS = {
+  addresses: [
+    { t: 'Address', v: function (p) { return p.address; }, cls: 'nowrap strong' },
+    { t: 'Result', v: function (p) { return info(p.status).label; }, h: function (p) { return pill(p.status); } },
+    { t: 'Plate reads', v: function (p) { return list(p.readings).join(', ') || '-'; }, cls: 'mono nowrap' },
+    { t: 'Photos in view', v: function (p) { return list(p.photos_in_view).join(', ') || '-'; }, sv: function (p) { return Number(p.n_photos_in_view) || 0; }, cls: 'mono' },
+    { t: 'Confidence', v: function (p) { return p.confidence || '-'; }, sv: CONF_RANK },
+    { t: 'Explanation', v: function (p) { return p.explanation || ''; }, cls: 'ex' }
+  ],
+  plates: [
+    { t: 'Plate', v: function (p) { return p.plate_id; }, cls: 'nowrap strong' },
+    { t: 'Reads', v: function (p) { return p.reading_display || '?'; }, cls: 'mono nowrap' },
+    { t: 'Result', v: function (p) { return info(p.status).label; }, h: function (p) { return pill(p.status); } },
+    { t: 'Expected here', v: function (p) { return p.expected_address || '-'; }, cls: 'nowrap' },
+    { t: 'Photos', v: function (p) { return list(p.photos).join(', ') || '-'; }, sv: function (p) { return Number(p.n_photos) || 0; }, cls: 'mono' },
+    { t: 'Confidence', v: function (p) { return p.confidence || '-'; }, sv: CONF_RANK },
+    { t: 'Explanation', v: function (p) { return p.explanation || ''; }, cls: 'ex' }
+  ],
+  skipped: [
+    { t: 'Photo', v: function (p) { return String(p.sequence_number); }, sv: function (p) { return Number(p.sequence_number); }, cls: 'nowrap strong' },
+    { t: 'Taken', v: function (p) { return fmtTime(p.datetime, 'paris') || '-'; }, sv: function (p) { return String(p.datetime || ''); }, cls: 'nowrap' },
+    { t: 'Reason', v: function (p) { return p.skip_reason || '-'; } }
+  ]
+};
+function rowsFor(tab) {
+  var kind = kindOfTab(tab);
+  var src = tab === 'addresses' ? addrs : tab === 'plates' ? plates : photos.filter(function (p) { return !p.properties.valid; });
+  var base = tab === 'skipped' ? src : src.filter(function (f) { return passes(kind, f); });
+  var cols = COLS[tab];
+  var q = state.q.toLowerCase();
+  var rows = q ? base.filter(function (f) {
+    return cols.some(function (c) { return String(c.v(f.properties)).toLowerCase().indexOf(q) >= 0; });
+  }) : base.slice();
+  var s = state.sort[tab];
+  if (s) {
+    var key = cols[s.i].sv || cols[s.i].v;
+    rows.sort(function (a, b) {
+      var x = key(a.properties), y = key(b.properties);
+      var r = (typeof x === 'number' && typeof y === 'number') ? x - y : String(x).localeCompare(String(y), undefined, { numeric: true });
+      return s.d * r;
+    });
+  }
+  return { rows: rows, total: base.length, kind: kind, cols: cols };
+}
+function emptyText(tab) {
+  if (tab === 'plates') return MODE === 'inspect' ? 'No plates in inspection mode.' : 'No plate was found.';
+  if (tab === 'skipped') return 'No photo was skipped.';
+  return 'No address was in view.';
+}
+function buildTable() {
+  var r = rowsFor(state.tab);
+  var s = state.sort[state.tab];
+  var head = '<tr>' + r.cols.map(function (c, i) {
+    var on = s && s.i === i;
+    return '<th scope="col" data-i="' + i + '" aria-sort="' + (on ? (s.d > 0 ? 'ascending' : 'descending') : 'none') + '">' + esc(c.t) +
+      (on ? '<span class="arr">' + (s.d > 0 ? '\u25b2' : '\u25bc') + '</span>' : '') + '</th>';
+  }).join('') + '</tr>';
+  var body = r.rows.length ? r.rows.map(function (f) {
+    var p = f.properties;
+    return '<tr data-id="' + esc(idOf(r.kind, p)) + '">' + r.cols.map(function (c) {
+      return '<td' + (c.cls ? ' class="' + c.cls + '"' : '') + '>' + (c.h ? c.h(p) : esc(c.v(p))) + '</td>';
+    }).join('') + '</tr>';
+  }).join('') : '<tr><td colspan="' + r.cols.length + '" class="empty">' + esc(r.total ? 'No row matches the search.' : emptyText(state.tab)) + '</td></tr>';
+  $('twrap').innerHTML = '<table><thead>' + head + '</thead><tbody>' + body + '</tbody></table>';
+  var noun = state.tab === 'addresses' ? 'addresses' : state.tab === 'plates' ? 'plates' : 'photos';
+  $('count').textContent = (r.rows.length === r.total ? r.total : r.rows.length + ' of ' + r.total) + ' ' + noun +
+    (state.filter && state.tab !== 'skipped' ? ' (filtered)' : '');
+  markRow();
+}
+function markRow() {
+  var want = state.sel && state.sel.kind === kindOfTab(state.tab) ? state.sel.id : null;
+  document.querySelectorAll('#twrap tbody tr[data-id]').forEach(function (tr) { tr.classList.toggle('sel', tr.dataset.id === want); });
+}
+$('twrap').addEventListener('click', function (e) {
+  var th = e.target.closest('th[data-i]');
+  if (th) {
+    var i = Number(th.dataset.i), s = state.sort[state.tab];
+    state.sort[state.tab] = { i: i, d: s && s.i === i ? -s.d : 1 };
+    buildTable();
+    return;
+  }
+  var tr = e.target.closest('tr[data-id]');
+  if (tr) select(kindOfTab(state.tab), tr.dataset.id, true);
+});
+function setTab(t, keepFilter) {
+  state.tab = t;
+  document.querySelectorAll('#tabs button').forEach(function (b) {
+    var on = b.dataset.tab === t;
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-selected', on ? 'true' : 'false');
+  });
+  if (!keepFilter && state.filter && state.filter.kind !== kindOfTab(t)) {
+    state.filter = null;
+    refreshCards();
+    drawMarkers();
+  }
+  state.q = '';
+  $('search').value = '';
+  $('search').placeholder = t === 'addresses' ? 'Search addresses' : t === 'plates' ? 'Search plates' : 'Search reasons';
+  buildTable();
+}
+document.querySelectorAll('#tabs button').forEach(function (b) {
+  if (b.dataset.tab === 'plates' && MODE === 'inspect') b.hidden = true;
+  b.addEventListener('click', function () { setTab(b.dataset.tab, false); });
+});
+$('search').addEventListener('input', function () { state.q = this.value.trim(); buildTable(); });
+
+/* ---------- Export ---------- */
+function csvCell(v) {
+  var s = String(v == null ? '' : v);
+  if (/^[=+@\t\r]/.test(s)) s = "'" + s;
+  return /[",;\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+$('btn-export').addEventListener('click', function () {
+  var r = rowsFor(state.tab);
+  var idCol = r.kind === 'address' ? ['address_id'] : r.kind === 'plate' ? [] : [];
+  var lines = [idCol.concat(r.cols.map(function (c) { return c.t; }))].concat(r.rows.map(function (f) {
+    return (idCol.length ? [idOf(r.kind, f.properties)] : []).concat(r.cols.map(function (c) { return c.v(f.properties); }));
+  }));
+  var csv = '\ufeff' + lines.map(function (l) { return l.map(csvCell).join(','); }).join('\r\n') + '\r\n';
+  var blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'plateverif_' + state.tab + (state.filter && state.tab !== 'skipped' ? '_' + state.filter.status.toLowerCase() : '') + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(function () { document.body.removeChild(a); URL.revokeObjectURL(url); }, 1000);
+});
+
+/* ---------- Help dialog ---------- */
+(function () {
+  var shown = present(aCounts).concat(present(pCounts).filter(function (k) { return !aCounts[k]; }));
+  var keys = ORDER.filter(function (k) { return k !== 'IN_VIEW' || MODE === 'inspect'; });
+  keys.sort(function (a, b) { return (shown.indexOf(a) < 0) - (shown.indexOf(b) < 0); });
+  $('mlist').innerHTML = keys.map(function (st) { return pill(st) + '<span>' + esc(info(st).meaning) + '</span>'; }).join('');
+})();
+function openHelp() { $('modal').classList.add('open'); $('mclose').focus(); }
+function closeHelp() { $('modal').classList.remove('open'); $('btn-help').focus(); }
+$('btn-help').addEventListener('click', openHelp);
+$('mclose').addEventListener('click', closeHelp);
+$('modal').addEventListener('click', function (e) { if (e.target === $('modal')) closeHelp(); });
+document.addEventListener('keydown', function (e) {
+  if (e.key !== 'Escape') return;
+  if ($('modal').classList.contains('open')) closeHelp();
+  else if (state.sel) clearSel();
+});
+
+/* ---------- Resizable table drawer ---------- */
+var drawer = $('drawer'), handle = $('handle');
+var MIN_H = 56;
+var savedH = parseInt(store('plateverif.drawerH'), 10) || 0;
+function maxH() { return Math.max(MIN_H + 40, Math.round(window.innerHeight * 0.85) - (isMobile() ? 72 : 96)); }
+function curH() { return drawer.getBoundingClientRect().height; }
+function openH() { return savedH > MIN_H + 2 ? Math.min(savedH, maxH()) : Math.round(window.innerHeight * (isMobile() ? 0.42 : 0.3)); }
+function setH(px, save) {
+  px = Math.max(MIN_H, Math.min(maxH(), Math.round(px)));
+  document.documentElement.style.setProperty('--drawer-h', px + 'px');
+  var collapsed = px <= MIN_H + 2;
+  drawer.classList.toggle('collapsed', collapsed);
+  handle.setAttribute('aria-valuenow', String(px));
+  handle.setAttribute('aria-valuemax', String(maxH()));
+  $('dtoggle').setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+  if (save && !collapsed) { savedH = px; store('plateverif.drawerH', String(px)); }
+}
+function toggleDrawer() { setH(drawer.classList.contains('collapsed') ? openH() : MIN_H, false); }
+$('dtoggle').addEventListener('click', toggleDrawer);
+var drag = null;
+handle.addEventListener('pointerdown', function (e) {
+  if (e.button !== 0) return;
+  drag = { y: e.clientY, h: curH() };
+  handle.setPointerCapture(e.pointerId);
+  e.preventDefault();
+});
+handle.addEventListener('pointermove', function (e) { if (drag) setH(drag.h + drag.y - e.clientY, true); });
+function endDrag(e) {
+  if (!drag) return;
+  drag = null;
+  try { handle.releasePointerCapture(e.pointerId); } catch (err) { /* already released */ }
+}
+handle.addEventListener('pointerup', endDrag);
+handle.addEventListener('pointercancel', endDrag);
+handle.addEventListener('dblclick', toggleDrawer);
+handle.addEventListener('keydown', function (e) {
+  var step = e.shiftKey ? 80 : 24;
+  if (e.key === 'ArrowUp') { e.preventDefault(); setH(curH() + step, true); }
+  else if (e.key === 'ArrowDown') { e.preventDefault(); setH(curH() - step, true); }
+  else if (e.key === 'Home') { e.preventDefault(); setH(MIN_H, false); }
+  else if (e.key === 'End') { e.preventDefault(); setH(maxH(), true); }
+  else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleDrawer(); }
+});
+window.addEventListener('resize', function () { if (curH() > maxH()) setH(maxH(), false); });
+
+/* ---------- Start ---------- */
+setH(isMobile() ? MIN_H : openH(), false);
+renderIntro();
+setTab('addresses', false);
+drawMarkers();
+fitAll();
+window.__plateverif = { state: state, select: select, setFilter: setFilter, setTab: setTab, hasMap: hasMap };
+})();
+</script>
+</body>
+</html>

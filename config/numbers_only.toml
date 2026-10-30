@@ -1,0 +1,13 @@
+# Settings for model detections whose OCR reads digits only.
+[decision]
+compare_suffix = false
+# "1" read where the official number is 17: uncertain (partly read), not an error.
+partial_read_check = true
+# Out of place / Wrong side need 2 photos, a measured position and a confident reading.
+strict_error_claims = true
+
+[matching]
+# Experimental tolerance, guarded by multiple views and confidence checks.
+relaxed_match_distance_m = 12.0
+# Building-front rule: plate closer to its own number than to any other number on that side.
+frontage_match_max_m = 25.0
