@@ -4,18 +4,17 @@ The browser app is static. Deploy **website/** only. Models and Python inference
 
 ## Before any public push
 
-Read PUBLICATION.md. Resolve verified imagery credits before public GitHub publication, not only before Pages. Do not commit the sibling private-handoff folder, checkpoint, old ZIP or conversation backup. Use the prepared public-repo folder as the repository root; check the actual staged list, not just .gitignore.
+Resolve verified imagery credits before public GitHub publication, not only before Pages. Do not commit model binaries, old ZIPs or private artifacts. Check the actual staged file list — a .gitignore does not untrack files already committed.
 
 ## Publish
 
-1. Open the prepared project in Antigravity. Read the supplied ANTIGRAVITY_PUBLISH_PROMPT.md from outside the public tree.
-2. Resolve rights/credit preflight from a connected environment and obtain owner approval for any unresolved publication/licence choice. Run Python checks and local browser tests. Do not retrain or rewrite the pipeline.
-3. Create a clean Git branch/repository or a reviewed commit in the user's chosen repository. Do not force-push or replace unrelated history. Use GitHub/CLI login; never paste tokens into code.
-4. In GitHub, Settings → Pages → Build and deployment → Source → **GitHub Actions**.
-5. Run the **Deploy UAV Address Verification** workflow manually and acknowledge the publication checks only when they are actually complete.
-6. Use the deployment URL returned by the workflow, not a guessed URL. Add it to repository About and the Thirduni Live demo field. Confirm logged-out access to both repository and site.
+1. Verify imagery credits and rights are resolved. Run Python checks (python tools/check_handoff.py) and local browser tests.
+2. Create a clean Git commit or branch. Do not force-push or replace unrelated history. Use GitHub CLI login; never paste tokens into code.
+3. In GitHub, Settings → Pages → Build and deployment → Source → **GitHub Actions**.
+4. Run the **Deploy UAV Address Verification** workflow manually.
+5. Use the deployment URL returned by the workflow, not a guessed URL. Add it to repository About. Confirm logged-out access to both repository and site.
 
-The workflow uploads website/ with `actions/upload-pages-artifact@v4`, configures Pages and deploys with pages/id-token permissions. Manual dispatch prevents accidental automatic publication. CI runs CPU tests and integrity checks separately.
+The workflow uploads website/ with ctions/upload-pages-artifact@v4, configures Pages and deploys with pages/id-token permissions. Manual dispatch prevents accidental automatic publication. CI runs CPU tests and integrity checks separately.
 
 ## Acceptance checks at the public subpath
 
@@ -26,4 +25,4 @@ The workflow uploads website/ with `actions/upload-pages-artifact@v4`, configure
 - Check footer notices on mobile. No 404s or JavaScript exceptions in the console.
 - Test video/repository/demo links from a private browser window. Keep deployment available throughout 1–7 November judging.
 
-Record the actual commit, workflow run and public URL after success. Prepared configuration is not a claim of successful deployment.
+Record the actual commit, workflow run and public URL after success.

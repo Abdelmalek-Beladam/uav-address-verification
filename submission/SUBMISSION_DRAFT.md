@@ -14,13 +14,13 @@ An interactive browser workspace lets reviewers inspect source images, compare c
 The demonstration uses previously processed recordings; it does not perform fresh browser inference. UAV image acquisition, flight control and onboard processing are planned rather than implemented. Current evidence demonstrates the software workflow, not independent end-to-end accuracy or a deployed aerial service.
 
 ## Live demo
-Enter the actual deployed browser URL after publication. No guessed link or localhost address.
+https://abdelmalek-beladam.github.io/uav-address-verification/
 
 ## Repository
-Enter the actual public GitHub URL after checking logged-out access.
+https://github.com/Abdelmalek-Beladam/uav-address-verification
 
 ## Demo video
-Enter the real uploaded 2–4 minute video URL. Use unlisted YouTube or a publicly viewable equivalent.
+(Record and upload the demo video, then insert the YouTube/unlisted URL here.)
 
 ## Roles and tools
 Use TEAM_ROLES.md for specific human contributions. Use TOOLS_AND_PRIOR_WORK.md for stack, AI-tool and starting-point disclosure.
@@ -33,3 +33,4 @@ PDF, maximum eight slides. It supplements rather than replaces the working-produ
 
 ## Final checks
 All mandatory fields complete; English or French; logged-out links; full names with honest roles; AI tools and prior work disclosed; no invented flight, accuracy, customers or impact. Submit before **31 October 2026, 23:59 Algiers**. Keep the demo accessible during judging, 1–7 November. Do not claim a submission was completed merely because materials were prepared.
+

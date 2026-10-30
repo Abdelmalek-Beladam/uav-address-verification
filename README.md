@@ -58,7 +58,7 @@ This replays 21 documented OCR safety abstentions, reruns verification and compa
 
 ## Run fresh inference
 
-See [Running and environment notes](docs/RUN_GUIDE.md), [input formats](docs/DATA_FORMATS.md) and [adding a recording](docs/ADDING_A_SURVEY.md). A suitable detector checkpoint is required. The public preparation excludes the selected binary while redistribution permission remains unconfirmed. Its SHA-256 and actual configuration remain in `models/model_registry.json`. Obtain it from the maintainers with permission, then place it at `models/selected_detector/best.pt`.
+See [Running and environment notes](docs/RUN_GUIDE.md), [input formats](docs/DATA_FORMATS.md) and [adding a recording](docs/ADDING_A_SURVEY.md). A suitable detector checkpoint is required. Download `best.pt` from the [GitHub Releases page](https://github.com/Abdelmalek-Beladam/uav-address-verification/releases) and place it at `models/selected_detector/best.pt`. Its SHA-256 and configuration are recorded in `models/model_registry.json`.
 
 `requirements-inference.in` is a declared dependency input, not a validated exact historical lock. PaddleOCR assets may download on first use. Test a small batch in a compatible environment before a long run. Neither free-server nor user-PC performance has been established.
 
@@ -80,10 +80,11 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md), [architecture](docs/ARCHITECTURE.md) an
 
 ## Deployment and rights
 
-The static site can be hosted on GitHub Pages without hosting the models. [Deployment guide](docs/DEPLOYMENT.md) covers the workflow and public-release checks. Prepared files are **not proof of an actual deployment**. Add the final public demo URL to the GitHub repository About field once deployed.
+The static site can be hosted on GitHub Pages without hosting the models. [Deployment guide](docs/DEPLOYMENT.md) covers the workflow and public-release checks. Prepared files are **not proof of an actual deployment**. The live demo is at https://abdelmalek-beladam.github.io/uav-address-verification/. Repository: https://github.com/Abdelmalek-Beladam/uav-address-verification.
 
-Public GitHub publication redistributes files even before Pages is enabled. Check [credits](docs/DATA_CREDITS.md) and [publication preflight](docs/PUBLICATION.md) before making a repository public. No project-wide open-source licence is granted until the maintainers choose one; third-party licences remain separate. See LICENSE.md and THIRD_PARTY_NOTICES.md.
+Public GitHub publication redistributes files even before Pages is enabled. Check [credits](docs/DATA_CREDITS.md) before making a repository public. No project-wide open-source licence is granted until the maintainers choose one; third-party licences remain separate. See LICENSE.md and THIRD_PARTY_NOTICES.md.
 
 ## Team and development tools
 
 [Specific human contributions](submission/TEAM_ROLES.md) and [AI tools, stack and prior work](submission/TOOLS_AND_PRIOR_WORK.md) are recorded separately. This is an AI-assisted student project, not a claim of entirely unaided development.
+
