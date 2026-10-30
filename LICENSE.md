@@ -1,24 +1,14 @@
-MIT License
+# License & Terms of Use
 
-Copyright (c) 2026 Abdelmalek Beladam and Project Contributors
+Copyright (c) 2026. All rights reserved.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+## Source-Available / Inspection-Only Notice
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+This repository and its contents are made publicly visible for demonstration, review, and academic evaluation purposes only.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+- **No Open-Source Reuse License**: Public visibility on GitHub does not grant any right or license to copy, modify, distribute, sublicense, or commercially exploit this software, in whole or in part, in source code or binary form.
+- **Permitted Use**: You may inspect, clone, and run the code locally solely for evaluation, educational review, and testing of the research prototype.
+- **All other rights reserved**: Any other use, reproduction, or redistribution requires explicit prior written permission from the copyright holders.
 
 ---
 
@@ -29,7 +19,7 @@ This project incorporates public datasets and assets under their respective lice
 1. **Street Imagery**:
    - Source: [Panoramax](https://panoramax.openstreetmap.fr/) open camera platform.
    - Producer: immergis / contributors under the [Licence Ouverte / Open Licence 2.0 (Etalab)](https://www.etalab.gouv.fr/licence-ouverte-open-licence/).
-   - See docs/DATA_CREDITS.md for sequence metadata and source attribution.
+   - See `docs/DATA_CREDITS.md` for sequence metadata and source attribution.
 
 2. **Municipal Address Register**:
    - Source: [Ville de Paris Open Data](https://opendata.paris.fr/explore/dataset/adresse_paris/) — Base Adresse Nationale (BAN) Paris extract.

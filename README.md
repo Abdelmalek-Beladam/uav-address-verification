@@ -3,7 +3,7 @@
 [![Live Demo](https://img.shields.io/badge/Demo-Live_Dashboard-blue?style=for-the-badge&logo=googlechrome&logoColor=white)](https://abdelmalek-beladam.github.io/uav-address-verification/)
 [![Release](https://img.shields.io/github/v/release/Abdelmalek-Beladam/uav-address-verification?style=for-the-badge&color=success)](https://github.com/Abdelmalek-Beladam/uav-address-verification/releases)
 [![Python](https://img.shields.io/badge/Python-3.10%2B-brightgreen?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE.md)
+[![License](https://img.shields.io/badge/License-Inspection_Only-lightgrey.svg?style=for-the-badge)](LICENSE.md)
 
 An end-to-end computer vision and geospatial verification system designed for municipal address inspection and drone-assisted urban inventory. The system detects house number plates from street imagery, reads plate numbers via optical character recognition, triangulates observed camera positions, and cross-references candidate addresses against official municipal address registers.
 
@@ -92,20 +92,9 @@ python -m unittest discover -s tests -t .
 
 ---
 
-## 👥 Authors & Team
-
-Developed by:
-- **Abdelmalek Beladam** — Project Lead, Geospatial Pipeline Integration & Web Dashboard Architecture
-- **Amira Benmoussa** — Computer Vision Engineering & YOLO26n Model Training
-- **Khaoula Ghaleth** — Geomatics Research & Problem Methodology
-- **Ines Ait Dris** — UI/UX Product Design & Inspection Workflow
-- **Naila Sadaoui** — OCR Pipeline & Verification Logic
-
----
-
 ## 📜 License & Data Credits
 
-- Code is licensed under the [MIT License](LICENSE.md).
+- **Software License**: The source code and repository materials are made available for evaluation and inspection only. All rights reserved. No commercial reuse or redistribution license is granted without explicit written permission. See [LICENSE.md](LICENSE.md).
 - **Street Imagery**: Panoramax open imagery platform (licensed under Licence Ouverte / Etalab 2.0).
 - **Address Data**: Ville de Paris Open Data — Base Adresse Nationale (ODbL).
 - **Map Tiles**: © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors.
