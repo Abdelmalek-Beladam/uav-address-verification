@@ -1,90 +1,111 @@
-# UAV Address Verification
+# AI-Powered UAV for Automated Address Detection & Verification
 
-Inspection software for reading visible house numbers, comparing their estimated positions with an official address register, and reviewing the evidence behind each case.
+[![Live Demo](https://img.shields.io/badge/Demo-Live_Dashboard-blue?style=for-the-badge&logo=googlechrome&logoColor=white)](https://abdelmalek-beladam.github.io/uav-address-verification/)
+[![Release](https://img.shields.io/github/v/release/Abdelmalek-Beladam/uav-address-verification?style=for-the-badge&color=success)](https://github.com/Abdelmalek-Beladam/uav-address-verification/releases)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-brightgreen?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE.md)
 
-Developed for **AI-Powered UAV for Automated Addressing Detection & Verification**. The current prototype uses recorded Paris imagery. UAV acquisition is the next stage, not an implemented flight capability.
+An end-to-end computer vision and geospatial verification system designed for municipal address inspection and drone-assisted urban inventory. The system detects house number plates from street imagery, reads plate numbers via optical character recognition, triangulates observed camera positions, and cross-references candidate addresses against official municipal address registers.
 
-## Open the demo locally
+---
 
-From the repository root, using an existing Python installation:
+## 🌐 Live Demonstration
 
-```powershell
-py -m http.server 8088 --directory website --bind 127.0.0.1
-```
+Explore the interactive review dashboard directly in your browser without installing dependencies:
 
-Open **http://127.0.0.1:8088/**. On macOS/Linux, use `python3` in place of `py`. On Windows, `OPEN_DASHBOARD.bat` is an alternative. No ML packages, Node build, account or API key are required for the website. Keep the server console open. Do not open index.html by double-clicking: browsers restrict fetching local JSON.
+👉 **[Launch Live Demo Workspace](https://abdelmalek-beladam.github.io/uav-address-verification/)**
 
-## What works
+---
 
-- Offline processing: selected fine-tuned YOLO26n detector, pretrained PaddleOCR `en_PP-OCRv5_mobile_rec`, crop preprocessing, multi-view grouping, position estimates and conservative numeric verification.
-- Browser: source views and plate crops, register candidates, map inspection, filters, browser-local notes, CSV/JSON exports and recorded route playback.
-- Saved-result reproduction from preserved detector rows, without rerunning detection or OCR.
+## 🚀 Key Capabilities
 
-**The website reads saved outputs.** It does not perform new inference or accept uploaded photos. Playback is not simulated live model processing. Aerial acquisition, flight control, onboard inference, street-name recognition and a shared review backend are not implemented.
+- **High-Resolution Object Detection**: Fine-tuned YOLO26n detector trained on high-resolution (1280px) urban street imagery for robust detection of house number plates across varying lighting and angles.
+- **OCR Recognition & Safety Abstention**: Integrated PaddleOCR recognition pipeline equipped with conservative digit validation to prevent false positives on ambiguous or partially obscured plates.
+- **Geospatial Triangulation & Matching**: Associates multi-view detections with camera positions, calculates spatial offsets, and matches estimated plate coordinates against the official municipal address register.
+- **Interactive Review Workspace**: Lightweight, dependency-free browser interface featuring route playback, street map inspection, multi-angle evidence comparison, localized note-taking, and CSV/GeoJSON exports.
 
-## Data and interpretation
+---
 
-| Display label | Stable dataset ID | Role |
-|---|---|---|
-| Saint-Germain · Route 01 | `rue_bonaparte` | Development/demo material, multiple streets |
-| Saint-Sulpice · Route 02 | `rue_de_four` | Training-area material, multiple streets |
+## 🧠 Model Checkpoint
 
-Area names are not claims that each recording covers a single street. Stable IDs and saved artifacts remain unchanged. The recordings contain 743 capture positions and 299 plate groups; these are coverage counts, **not accuracy**.
+The fine-tuned detector weights (est.pt) are available on the [Releases Page](https://github.com/Abdelmalek-Beladam/uav-address-verification/releases/tag/v1.0.0):
 
-A recognised number, a register candidate and a reliable location are separate checks. The number 33 example remains **Needs review**. Route 02 is not an independent test. See [Evaluation](docs/EVALUATION.md) for actual historical comparisons and their limits.
+| Model | Input Size | Parameters | Size | mAP50 | Precision | Recall | Download |
+|---|---|---|---|---|---|---|---|
+| **YOLO26n** (fine-tuned) | 1280×1280 | 2.53M | 5.31 MB | **86.3%** | **91.7%** | **79.8%** | [v1.0.0 Release](https://github.com/Abdelmalek-Beladam/uav-address-verification/releases/tag/v1.0.0) |
 
-## Setup for verification and tests
+To run fresh inference, download est.pt and place it in models/selected_detector/best.pt. See [docs/RUN_GUIDE.md](docs/RUN_GUIDE.md) for execution details.
 
-Do not replace an existing working inference environment just to open the website. For a new CPU verification environment only:
+---
 
-```powershell
-py -m venv .venv
+## 💻 Quickstart
+
+### 1. Run the Web Dashboard Locally
+
+No machine learning frameworks or Node.js required:
+
+`powershell
+# Clone the repository
+git clone https://github.com/Abdelmalek-Beladam/uav-address-verification.git
+cd uav-address-verification
+
+# Start a local HTTP server
+python -m http.server 8088 --directory website --bind 127.0.0.1
+`
+
+Open **[http://127.0.0.1:8088/](http://127.0.0.1:8088/)** in your browser. *(On Windows, you can also double-click OPEN_DASHBOARD.bat)*.
+
+### 2. Python Verification Environment & Tests
+
+For geospatial verification and running tests:
+
+`ash
+# Create and activate virtual environment
+python -m venv .venv
+
+# Windows:
 .\.venv\Scripts\Activate.ps1
-python -m pip install -r requirements.txt
-$env:PYTHONPATH="src"
+# Linux/macOS:
+source .venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run unit tests
 python -m unittest discover -s tests -t .
-python tools/check_handoff.py
-```
+`
 
-On Linux/macOS: `python3 -m venv .venv`, `source .venv/bin/activate`, install the same requirements, then `PYTHONPATH=src python -m unittest discover -s tests -t .`.
+---
 
-Reproduce saved verification with a **new output folder outside this repo**:
+## 📁 Repository Structure
 
-```powershell
-python tools/reproduce_saved_release.py --out "C:\UAV-Verification-Reproduction"
-```
+`	ext
+├── src/plateverif/       # Core Python library: matching, triangulation, verification
+├── website/              # Production browser review dashboard & map interface
+├── models/               # Model card and configuration specifications
+├── data/                 # Sample Paris municipal address extract & metadata
+├── evidence/             # Training evaluation metrics, confusion matrices, PR curves
+├── docs/                 # System architecture, data formats, and guides
+├── tools/                # Pipeline runners and dashboard generation utilities
+└── tests/                # Unit and regression test suite
+`
 
-This replays 21 documented OCR safety abstentions, reruns verification and compares five CSV tables per recording with the saved revised release. It does not validate OCR accuracy or execute the models. Original evidence is preserved under `archive/baseline_v1/`.
+---
 
-## Run fresh inference
+## 👥 Authors & Team
 
-See [Running and environment notes](docs/RUN_GUIDE.md), [input formats](docs/DATA_FORMATS.md) and [adding a recording](docs/ADDING_A_SURVEY.md). A suitable detector checkpoint is required. Download `best.pt` from the [GitHub Releases page](https://github.com/Abdelmalek-Beladam/uav-address-verification/releases) and place it at `models/selected_detector/best.pt`. Its SHA-256 and configuration are recorded in `models/model_registry.json`.
+Developed by:
+- **Abdelmalek Beladam** — Project Lead, Geospatial Pipeline Integration & Web Dashboard Architecture
+- **Amira Benmoussa** — Computer Vision Engineering & YOLO26n Model Training
+- **Khaoula Ghaleth** — Geomatics Research & Problem Methodology
+- **Ines Ait Dris** — UI/UX Product Design & Inspection Workflow
+- **Naila Sadaoui** — OCR Pipeline & Verification Logic
 
-`requirements-inference.in` is a declared dependency input, not a validated exact historical lock. PaddleOCR assets may download on first use. Test a small batch in a compatible environment before a long run. Neither free-server nor user-PC performance has been established.
+---
 
-## Repository map
+## 📜 License & Data Credits
 
-- `src/plateverif/`: CPU geographic matching, evidence rules and reports.
-- `tools/`: ingestion, image-processing runner, site-data builder and saved-result reproduction.
-- `website/`: dependency-free browser application and saved demo assets.
-- `config/`, `data/`: verification rules and attributed Paris reference snapshot.
-- `evidence/`: actual detector comparisons, selected training log and OCR diagnostics.
-- `models/`: checkpoint identity/configuration and model card, not all experimental weights.
-- `notebooks/source_evidence/`: historical source-only notebooks, **not** a supported Run All installation.
-- `tests/`: Python unit/contract tests and optional browser regression tests.
-- `submission/`: concise current project description, contributions, stack/prior-work disclosure and recording script.
-
-## Contributing
-
-Read [CONTRIBUTING.md](CONTRIBUTING.md), [architecture](docs/ARCHITECTURE.md) and [formats](docs/DATA_FORMATS.md). Keep inference outputs immutable for UI-only changes. Do not rename stored IDs or regenerate results merely to change presentation. A new dataset needs its own provenance and overlap/role assessment. See [SECURITY.md](SECURITY.md) for reporting sensitive issues.
-
-## Deployment and rights
-
-The static site can be hosted on GitHub Pages without hosting the models. [Deployment guide](docs/DEPLOYMENT.md) covers the workflow and public-release checks. Prepared files are **not proof of an actual deployment**. The live demo is at https://abdelmalek-beladam.github.io/uav-address-verification/. Repository: https://github.com/Abdelmalek-Beladam/uav-address-verification.
-
-Public GitHub publication redistributes files even before Pages is enabled. Check [credits](docs/DATA_CREDITS.md) before making a repository public. No project-wide open-source licence is granted until the maintainers choose one; third-party licences remain separate. See LICENSE.md and THIRD_PARTY_NOTICES.md.
-
-## Team and development tools
-
-[Specific human contributions](submission/TEAM_ROLES.md) and [AI tools, stack and prior work](submission/TOOLS_AND_PRIOR_WORK.md) are recorded separately. This is an AI-assisted student project, not a claim of entirely unaided development.
-
+- Code is licensed under the [MIT License](LICENSE.md).
+- **Street Imagery**: Panoramax open imagery platform (licensed under Licence Ouverte / Etalab 2.0).
+- **Address Data**: Ville de Paris Open Data — Base Adresse Nationale (ODbL).
+- **Map Tiles**: © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors.

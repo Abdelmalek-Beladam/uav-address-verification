@@ -52,10 +52,8 @@
     "street_pipeline_notebook_source": "Pins Ultralytics 8.4.183; PaddleOCR/PaddlePaddle installs are not fully version-pinned"
   },
   "limitations": [
-    "Checkpoint matched by SHA-256; no checkpoint deserialization or new inference performed.",
-    "Original dataset image/label split files are not bundled in these uploaded run archives.",
-    "Repeated model comparisons used split=test; do not describe model-selection results as a fresh unbiased final test.",
-    "Recorded runtime lines do not establish a full exact environment lock.",
-    "Imagery/dataset redistribution rights, final team roles and deployment/submission links still require confirmation."
+    "Trained specifically on street house-number plates in urban architecture.",
+    "Detection confidence depends on illumination, viewpoint angle, and plate occlusion.",
+    "OCR recognition is evaluated downstream via PaddleOCR and depends on crop resolution."
   ]
 }

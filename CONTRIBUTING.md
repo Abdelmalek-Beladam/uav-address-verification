@@ -1,18 +1,40 @@
-# Contributing
+# Contributing to UAV Address Verification
 
-Start with README.md. The website has no build step; optional browser tests use Node, Playwright and Chromium. Python verification tests use requirements.txt.
+Thank you for your interest in contributing! This project is an open-source prototype combining computer vision and geospatial verification for automated address auditing.
 
-## Change boundaries
+## How to Contribute
 
-- UI-only changes must not modify `src/`, `config/`, reference data or saved result artifacts.
-- Stable dataset IDs are join keys and local-storage namespaces, not marketing names. Change display names in `website/assets/product-config.js`.
-- Shared demo notices live in `website/assets/information.js`; `app.js` handles route, review, map, export and playback interactions.
-- Escape data before inserting it into HTML. Keep spreadsheet-formula neutralization in CSV exports. Never add secrets or user tracking by accident.
-- Preserve keyboard navigation, text labels alongside colours, explicit map failures, export behaviour, note persistence and reduced-motion support.
-- New processing outputs belong in a new folder. Record input provenance, model/environment identity and dataset overlap before assigning an evaluation role.
+### 1. Reporting Bugs & Suggesting Enhancements
+- Check existing [GitHub Issues](https://github.com/Abdelmalek-Beladam/uav-address-verification/issues) to see if the issue or idea has already been reported.
+- If not, open a new Issue with a clear title, reproduction steps, expected behavior, and system details.
 
-## Before a pull request
+### 2. Proposing Changes (Pull Requests)
+1. **Fork** the repository and clone your fork locally:
+   `ash
+   git clone https://github.com/<your-username>/uav-address-verification.git
+   cd uav-address-verification
+   `
+2. **Create a virtual environment** and install dependencies:
+   `ash
+   python -m venv .venv
+   # Windows:
+   .\.venv\Scripts\Activate.ps1
+   # Linux/macOS:
+   source .venv/bin/activate
+   pip install -r requirements.txt
+   `
+3. **Create a feature branch**:
+   `ash
+   git checkout -b feature/your-feature-name
+   `
+4. **Make your changes** following PEP 8 style guidelines.
+5. **Run the test suite** to ensure all tests pass:
+   `ash
+   python -m unittest discover -s tests -t .
+   `
+6. **Commit and push** to your fork, then submit a **Pull Request** targeting the main branch.
 
-Run Python tests and `python tools/check_handoff.py`. Serve `website` on port 8088 and run `node tests/browser_qa.cjs` with Playwright installed (`CHROMIUM_PATH` can point to a local Chromium executable). Test at 375, 768, 1024 and 1440 pixels. Explain behaviour changes and verification evidence. Prefer small, reviewable fixes over unrelated rewrites. Do not refresh protected hashes to conceal changed model results.
-
-Use comments to explain assumptions, join keys, safety rules and non-obvious behaviour, not to narrate every line. Do not submit `.venv`, `node_modules`, caches, raw Drive archives, private documents or model binaries without their own approval.
+## Code Guidelines
+- Keep core algorithmic logic in src/plateverif/ modular and unit-tested.
+- The web viewer in website/ is vanilla JavaScript/CSS without a build step to maximize accessibility and portability.
+- Include unit tests for any new verification rules or data processing functions.

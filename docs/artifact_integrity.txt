@@ -1,3 +1,0 @@
-Protected files checked: 2364
-Artifact integrity: PASS
-This checks saved-file identity, not model accuracy or fresh inference compatibility.

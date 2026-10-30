@@ -1,7 +1,25 @@
-# Security
+# Security Policy
 
-This demonstration has no authenticated backend. Do not store confidential information in browser notes, commit credentials or use outputs for automatic enforcement.
+## Supported Versions
 
-Report a suspected vulnerability privately through the repository maintainer's GitHub profile/contact channel. Do not include a credential or exploit data in a public issue. If a secret has been published, revoke it before removing the file; deleting a file does not remove Git history.
+| Version | Supported          |
+| ------- | ------------------ |
+| 1.0.x   | :white_check_mark: |
+| < 1.0   | :x:                |
 
-The supplied credential-pattern scan is a best-effort check, not a security certification. Review the actual staged diff before every public push. Model checkpoints should only be loaded from trusted sources; a hash proves file identity, not that arbitrary serialized content is safe.
+## Reporting a Vulnerability
+
+If you discover a potential security vulnerability within this project, please notify the maintainers privately rather than opening a public issue.
+
+- **Email**: Contact Abdelmalek Beladam directly at [abdelmalekbeladam@gmail.com](mailto:abdelmalekbeladam@gmail.com).
+- **Alternative**: Use GitHub's private vulnerability reporting feature on this repository.
+
+Please include:
+- A description of the vulnerability and its potential impact.
+- Step-by-step instructions or proof-of-concept to reproduce the behavior.
+- Any suggested remediations or mitigations.
+
+We will acknowledge receipt within 48 hours and work with you to resolve the issue promptly before public disclosure.
+
+## Local Data & Privacy
+- The web review workspace stores operator notes and annotations exclusively in your local browser storage (localStorage). No reviewer data is transmitted to an external server.

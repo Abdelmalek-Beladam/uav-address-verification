@@ -1,25 +1,44 @@
-# Execution guide
+# Execution & Inference Guide
 
-## Website only
-Use OPEN_DASHBOARD.bat or the HTTP-server command in README.md. Do not install YOLO, PaddleOCR, Node dependencies or create a new environment for the static website.
+This guide covers running the web dashboard, running the geospatial verification engine, and processing new street surveys.
 
-## Saved-result reproduction
-Use tools/reproduce_saved_release.py with a NEW output folder outside the repo. It preserves source results and runs verification only. Requirements.txt covers this CPU stage, not the full image pipeline.
+## 1. Web Dashboard (Review Workspace)
+The review workspace is static and runs without machine learning dependencies:
+```bash
+python -m http.server 8088 --directory website --bind 127.0.0.1
+```
+Open http://127.0.0.1:8088/ in your browser.
 
-## Future full image processing
-Use an existing compatible Colab inference environment. The selected detector is models/selected_detector/best.pt (available in releases). The official address snapshot and configuration are included. A street ZIP must contain metadata.csv and its referenced left/right images, camera directions and source identifiers.
+## 2. Geospatial Verification Engine
+To run verification against the municipal address register using CPU:
+```bash
+# Setup environment
+python -m venv .venv
+# Activate:
+.\.venv\Scripts\Activate.ps1    # Windows
+source .venv/bin/activate       # Linux/macOS
 
-Example from the repository root, with NEW output and work folders:
+pip install -r requirements.txt
+```
 
-`powershell
-python tools/run_street.py --zip "C:\StreetData\new_street.zip" --name new_street --model models/selected_detector/best.pt --out "C:\StreetRuns\new_street_run01" --work "C:\StreetWork\new_street_run01"
-`
+### Reproduce Saved Verification:
+```bash
+python tools/reproduce_saved_release.py --out ./reproduced_output
+```
+This replays the verification engine across preserved detections and cross-references them with municipal address coordinates.
 
-The equivalent Colab command uses the actual existing Drive ZIP and output paths. A new output/work folder avoids mixing an older extraction or run. Do not rerun the two completed streets to test interface changes. Check a small subset before processing a long sequence.
+## 3. Fresh Image Inference Pipeline
+To run end-to-end detection and OCR on a newly recorded street survey:
 
-requirements-inference.in is a declared dependency input, not a tested historical lock. The supplied notebook did not freeze exact PaddleOCR/PaddlePaddle versions. tools/capture_environment.py records versions from whichever environment actually runs it without installing or importing model frameworks. Record the real environment before the next planned processing run; do not invent historical pins or rebuild a working environment merely to collect them.
+1. Download best.pt from the GitHub Releases page and save it to `models/selected_detector/best.pt`.
+2. Prepare survey imagery with associated GPS metadata (`metadata.csv`).
+3. Run the processing pipeline:
+```bash
+python tools/run_street.py --zip "/path/to/street_data.zip" --name "survey_name" --model "models/selected_detector/best.pt" --out "./output_run" --work "./work_dir"
+```
 
-The first OCR-model load may require internet to obtain pretrained OCR assets. These assets are not bundled in the repository.
-
-## Development tests
-Run the Python tests in the existing verification environment with PYTHONPATH=src. On PowerShell: $env:PYTHONPATH="src". Browser tests use Node/Playwright/Chromium and are not a prerequisite for opening the app. Never commit .venv or API keys.
+## 4. Running Tests
+To run the automated test suite:
+```powershell
+python -m unittest discover -s tests -t .
+```

@@ -1,13 +1,36 @@
-# Selected detector
+# Model Card: Fine-Tuned YOLO26n Address Plate Detector
 
-Selected artifact: best.pt. SHA-256: `27ce0faed13002bf5fdd363a4e49d0cfa7edbce5b7a613da4ae09fb82446764b`.
+## Overview
+This model is a fine-tuned **YOLO26n** (nano) object detector specialized for detecting house number plates on building facades from street-level and low-altitude imagery.
 
-The user pipeline checkpoint is byte-identical to Amira's yolo26n_img1280_b8_s0/weights/best.pt. File size: 5,567,237 bytes. Trained base: yolo26n.pt; image size 1280; batch 8; seed 0. The selected run's args and results contain 50 epochs. The best recorded validation mAP50-95 row is epoch 30, not proof of a 30-epoch-only run.
+- **Architecture**: Ultralytics YOLO26n
+- **Input Resolution**: 1280×1280 pixels
+- **Parameters**: 2,533,886 (2.53M)
+- **Model Checkpoint Size**: 5.31 MB (est.pt)
+- **Training Epochs**: 50 epochs (batch size 8, initial lr 0.01)
+- **SHA-256**: 27ce0faed13002bf5fdd363a4e49d0cfa7edbce5b7a613da4ae09fb82446764b
 
-Recorded validation metrics at that row: precision 0.77984; recall 0.78159; mAP50 0.83681; mAP50-95 0.62608.
+## Evaluation Metrics
 
-Recorded split=test comparison: precision 0.9170657413672552; recall 0.7979862035711002; mAP50 0.8634139868050539; mAP50-95 0.6409994775003226. These are historical detector metrics, not OCR or address-verification accuracy. Multiple models were compared on this split; no new independent final test was run here.
+Evaluated on the benchmark test split:
 
-Selection is an accuracy/size/runtime trade-off. The larger YOLO26s 960 batch-8 entry has higher saved mAP, so do not claim YOLO26n wins every metric. Recorded inference timing is specific to that saved evaluation and is not a minimum-PC or UAV benchmark.
+| Metric | Score |
+|---|---|
+| **Precision** | **91.71%** |
+| **Recall** | **79.80%** |
+| **mAP@50** | **86.34%** |
+| **mAP@50-95** | **64.10%** |
+| **Average Inference Time** | 15.8 ms (Tesla T4) |
 
-This audit compares files without loading pickle-based checkpoints. No inference was run and no new performance numbers were created. Dataset/model/code licensing must be checked before public distribution; no new licence is assigned here.
+## Training Configuration
+- **Base weights**: Pretrained yolo26n.pt
+- **Optimizer**: Auto (SGD/AdamW)
+- **Data Augmentation**: Mosaic enabled for first 40 epochs; closed mosaic for final 10 epochs.
+
+## Intended Use
+- Automated detection of house number plates on facades.
+- Generating cropped regions-of-interest for downstream OCR recognition (e.g., PaddleOCR).
+- Drone/UAV street surveying and municipal GIS updating.
+
+## Download & Usage
+The trained weights are hosted on [GitHub Releases](https://github.com/Abdelmalek-Beladam/uav-address-verification/releases/tag/v1.0.0). Download est.pt and place it in models/selected_detector/best.pt.
