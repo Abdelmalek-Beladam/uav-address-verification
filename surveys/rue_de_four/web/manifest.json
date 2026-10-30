@@ -1,0 +1,10 @@
+{
+  "street": "rue_de_four",
+  "photos": 553,
+  "views": 1106,
+  "thumb_width": 480,
+  "ocr_model": "en_PP-OCRv5_mobile_rec",
+  "source": "yolo26n+en_ppocrv5+3prep",
+  "suffix_checked": false,
+  "created": "2026-10-24 18:06:21"
+}

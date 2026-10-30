@@ -1,0 +1,10 @@
+{
+  "street": "rue_bonaparte",
+  "photos": 190,
+  "views": 380,
+  "thumb_width": 480,
+  "ocr_model": "en_PP-OCRv5_mobile_rec",
+  "source": "yolo26n+en_ppocrv5+3prep",
+  "suffix_checked": false,
+  "created": "2026-10-24 18:01:22"
+}

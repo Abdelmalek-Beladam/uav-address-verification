@@ -1,0 +1,28 @@
+{
+  "checked_at": "2026-10-30",
+  "routes": [
+    {
+      "dataset_id": "rue_bonaparte",
+      "display_name": "Saint-Germain \u00b7 Route 01",
+      "sequence_id": "3caf0f9b-e60f-4111-8b3e-ecba26bd18c5",
+      "metadata_url": "https://panoramax.ign.fr/api/collections/3caf0f9b-e60f-4111-8b3e-ecba26bd18c5",
+      "verification_status": "source_metadata_verified",
+      "producer": "immergis",
+      "license": "etalab-2.0",
+      "credit": "Street imagery: immergis, via Panoramax IGN, Licence Ouverte 2.0. Perspective views and crops derived for this prototype.",
+      "evidence_note": "Retrieved and verified from official Panoramax IGN API on 30 October 2026.",
+      "license_url": "https://alliance.numerique.gouv.fr/licence-ouverte-open-licence/"
+    },
+    {
+      "dataset_id": "rue_de_four",
+      "display_name": "Saint-Sulpice \u00b7 Route 02",
+      "sequence_id": "cb2825a3-372d-4ed1-9b73-53d8dbdc2c9d",
+      "metadata_url": "https://panoramax.ign.fr/api/collections/cb2825a3-372d-4ed1-9b73-53d8dbdc2c9d",
+      "verification_status": "source_metadata_verified",
+      "producer": "immergis",
+      "license": "etalab-2.0",
+      "license_url": "https://alliance.numerique.gouv.fr/licence-ouverte-open-licence/",
+      "credit": "Street imagery: immergis, via Panoramax IGN, Licence Ouverte 2.0. Perspective views and crops derived for this prototype."
+    }
+  ]
+}
