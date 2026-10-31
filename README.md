@@ -92,6 +92,25 @@ python -m unittest discover -s tests -t .
 
 ---
 
+## 👥 Team Contributions
+
+**Khaoula Ghaleth** — *Project Leadership & Methodology*  
+Led project methodology and technical planning, team supervision and coordination. Provided project documentation for data collection, annotation, and models development. Participated in detection models development using three techniques, including YOLO11n, YOLO26n and Faster R-CNN. Proposed a UAV simulation testing in a virtual environment. Proposed the development of a Decision Support System and provided functional and technical dashboard design. Contributed to submission preparation.
+
+**Abdelmalek Beladam** — *Project Coordination & End-To-End Prototype Development*  
+Coordinated the project and led end-to-end prototype development. Conducted data research, sourced the street survey imagery from Panoramax, and manually annotated the complete dataset across training, validation, and testing splits. Participated in developing, training, and evaluating the YOLO11n and YOLO11s plate detection models, built and tested OCR recognition pipelines with PaddleOCR, and reviewed OCR examples and failure cases. Integrated the selected detector, OCR processing, and geospatial verification workflow, handling street-survey processing and result exports against official Paris address records. Developed and tested the entire interactive web demonstrator and review dashboard, created the GitHub repository, set up automated testing and technical documentation, and contributed to submission preparation.
+
+**Amira Benmoussa** — *AI Models Development*  
+Contributed to the development, training, and evaluation of YOLO26n and YOLO26s model for address-plate detection.
+
+**Ines Ait Dris** — *AI Models Research & Development*  
+Provided models documentation and contributed to the development, training, and evaluation of YOLO11s model.
+
+**Naila Sadaoui** — *Data Research & AI Models Development*  
+Conducted data research and contributed to the development, training, and evaluation of YOLO11n model, for address-plate detection.
+
+---
+
 ## 📜 License & Data Credits
 
 - **Software License**: The source code and repository materials are made available for evaluation and inspection only. All rights reserved. No commercial reuse or redistribution license is granted without explicit written permission. See [LICENSE.md](LICENSE.md).
